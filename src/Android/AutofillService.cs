@@ -12,22 +12,24 @@ using Bit.App.Resources;
 
 namespace Bit.Android
 {
-    [Service(Permission = global::Android.Manifest.Permission.BindAccessibilityService, Label = "bitwarden")]
+    [Service(Permission = global::Android.Manifest.Permission.BindAccessibilityService, Label = "Bitwarden")]
     [IntentFilter(new string[] { "android.accessibilityservice.AccessibilityService" })]
     [MetaData("android.accessibilityservice", Resource = "@xml/accessibilityservice")]
     public class AutofillService : AccessibilityService
     {
         private NotificationChannel _notificationChannel;
 
+        private const string BitwardenTag = "bw_access";
         private const int AutoFillNotificationId = 34573;
         private const string SystemUiPackage = "com.android.systemui";
         private const string BitwardenPackage = "com.x8bit.bitwarden";
-        private const string BitwardenWebsite = "bitwarden.com";
+        private const string BitwardenWebsite = "vault.bitwarden.com";
 
         private static Dictionary<string, Browser> SupportedBrowsers => new List<Browser>
         {
             new Browser("com.android.chrome", "url_bar"),
             new Browser("com.chrome.beta", "url_bar"),
+            new Browser("org.chromium.chrome", "url_bar"),
             new Browser("com.android.browser", "url"),
             new Browser("com.brave.browser", "url_bar"),
             new Browser("com.opera.browser", "url_field"),
@@ -42,10 +44,11 @@ namespace Bit.Android
             new Browser("com.sec.android.app.sbrowser", "location_bar_edit_text"),
             new Browser("com.sec.android.app.sbrowser.beta", "location_bar_edit_text"),
             new Browser("com.yandex.browser", "bro_omnibar_address_title_text",
-                (s) => s.Split(' ').FirstOrDefault()),
+                (s) => s.Split(new char[]{' ', ' '}).FirstOrDefault()), // 0 = Regular Space, 1 = No-break space (00A0)
             new Browser("org.mozilla.firefox", "url_bar_title"),
             new Browser("org.mozilla.firefox_beta", "url_bar_title"),
             new Browser("org.mozilla.focus", "display_url"),
+            new Browser("org.mozilla.klar", "display_url"),
             new Browser("com.ghostery.android.ghostery", "search_field"),
             new Browser("org.adblockplus.browser", "url_bar_title"),
             new Browser("com.htc.sense.browser", "title"),
@@ -59,12 +62,40 @@ namespace Bit.Android
             new Browser("com.ksmobile.cb", "address_bar_edit_text"),
             new Browser("acr.browser.lightning", "search"),
             new Browser("acr.browser.barebones", "search"),
-            new Browser("com.microsoft.emmx", "url_bar")
+            new Browser("com.microsoft.emmx", "url_bar"),
+            new Browser("com.duckduckgo.mobile.android", "omnibarTextInput"),
+            new Browser("mark.via.gp", "aw"),
+            new Browser("org.bromite.bromite", "url_bar"),
+            new Browser("com.kiwibrowser.browser", "url_bar"),
+            new Browser("com.ecosia.android", "url_bar"),
         }.ToDictionary(n => n.PackageName);
+
+        // Known packages to skip
+        private static HashSet<string> FilteredPackageNames => new HashSet<string>
+        {
+            SystemUiPackage,
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.apps.nexuslauncher",
+            "com.google.android.launcher",
+            "com.computer.desktop.ui.launcher",
+            "com.launcher.notelauncher",
+            "com.anddoes.launcher",
+            "com.actionlauncher.playstore",
+            "ch.deletescape.lawnchair.plah",
+            "com.microsoft.launcher",
+            "com.teslacoilsw.launcher",
+            "com.teslacoilsw.launcher.prime",
+            "is.shortcut",
+            "me.craftsapp.nlauncher",
+            "com.ss.squarehome2"
+        };
 
         private readonly IAppSettingsService _appSettings;
         private long _lastNotificationTime = 0;
         private string _lastNotificationUri = null;
+        private HashSet<string> _launcherPackageNames = null;
+        private DateTime? _lastLauncherSetBuilt = null;
+        private TimeSpan _rebuildLauncherSpan = TimeSpan.FromHours(1);
 
         public AutofillService()
         {
@@ -85,17 +116,19 @@ namespace Bit.Android
 
             try
             {
+                if(SkipPackage(e?.PackageName))
+                {
+                    return;
+                }
+
                 var root = RootInActiveWindow;
-                if(e == null || root == null || string.IsNullOrWhiteSpace(e.PackageName) ||
-                    e.PackageName == SystemUiPackage || e.PackageName.Contains("launcher") ||
-                    root.PackageName != e.PackageName)
+                if(root == null || root.PackageName != e.PackageName)
                 {
                     return;
                 }
 
                 //var testNodes = GetWindowNodes(root, e, n => n.ViewIdResourceName != null && n.Text != null, false);
                 //var testNodesData = testNodes.Select(n => new { id = n.ViewIdResourceName, text = n.Text });
-                //testNodes.Dispose();
 
                 var notificationManager = (NotificationManager)GetSystemService(NotificationService);
                 var cancelNotification = true;
@@ -103,7 +136,7 @@ namespace Bit.Android
                 switch(e.EventType)
                 {
                     case EventTypes.ViewFocused:
-                        if(!e.Source.Password || !_appSettings.AutofillPasswordField)
+                        if(e.Source == null || !e.Source.Password || !_appSettings.AutofillPasswordField)
                         {
                             break;
                         }
@@ -410,16 +443,17 @@ namespace Bit.Android
         }
 
         private NodeList GetWindowNodes(AccessibilityNodeInfo n, AccessibilityEvent e,
-            Func<AccessibilityNodeInfo, bool> condition, bool disposeIfUnused, NodeList nodes = null)
+            Func<AccessibilityNodeInfo, bool> condition, bool disposeIfUnused, NodeList nodes = null,
+            int recursionDepth = 0)
         {
             if(nodes == null)
             {
                 nodes = new NodeList();
             }
 
-            if(n != null)
+            var dispose = disposeIfUnused;
+            if(n != null && recursionDepth < 50)
             {
-                var dispose = disposeIfUnused;
                 if(n.WindowId == e.WindowId && !(n.ViewIdResourceName?.StartsWith(SystemUiPackage) ?? false) && condition(n))
                 {
                     dispose = false;
@@ -428,16 +462,52 @@ namespace Bit.Android
 
                 for(var i = 0; i < n.ChildCount; i++)
                 {
-                    GetWindowNodes(n.GetChild(i), e, condition, true, nodes);
-                }
-
-                if(dispose)
-                {
-                    n.Dispose();
+                    var childNode = n.GetChild(i);
+                    if(i > 100)
+                    {
+                        global::Android.Util.Log.Info(BitwardenTag, "Too many child iterations.");
+                        break;
+                    }
+                    else if(childNode.GetHashCode() == n.GetHashCode())
+                    {
+                        global::Android.Util.Log.Info(BitwardenTag,
+                            "Child node is the same as parent for some reason.");
+                    }
+                    else
+                    {
+                        GetWindowNodes(childNode, e, condition, true, nodes, recursionDepth++);
+                    }
                 }
             }
 
+            if(dispose)
+            {
+                n?.Dispose();
+            }
+
             return nodes;
+        }
+
+        private bool SkipPackage(string eventPackageName)
+        {
+            if(string.IsNullOrWhiteSpace(eventPackageName) || FilteredPackageNames.Contains(eventPackageName)
+                || eventPackageName.Contains("launcher"))
+            {
+                return true;
+            }
+
+            if(_launcherPackageNames == null || _lastLauncherSetBuilt == null ||
+                (DateTime.Now - _lastLauncherSetBuilt.Value) > _rebuildLauncherSpan)
+            {
+                // refresh launcher list every now and then
+                _lastLauncherSetBuilt = DateTime.Now;
+                var intent = new Intent(Intent.ActionMain);
+                intent.AddCategory(Intent.CategoryHome);
+                var resolveInfo = PackageManager.QueryIntentActivities(intent, 0);
+                _launcherPackageNames = resolveInfo.Select(ri => ri.ActivityInfo.PackageName).ToHashSet();
+            }
+
+            return _launcherPackageNames.Contains(eventPackageName);
         }
 
         public class Browser

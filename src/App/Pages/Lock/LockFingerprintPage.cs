@@ -38,11 +38,13 @@ namespace Bit.App.Pages
                         Android: "fingerprint.png",
                         Windows: "smile.png");
             var biometricText = Helpers.OnPlatform(
-                        iOS: _deviceInfoService.HasFaceIdSupport ? AppResources.UseFaceIDToUnlock : AppResources.UseFingerprintToUnlock,
+                        iOS: _deviceInfoService.HasFaceIdSupport ?
+                            AppResources.UseFaceIDToUnlock : AppResources.UseFingerprintToUnlock,
                         Android: AppResources.UseFingerprintToUnlock,
                         Windows: AppResources.UseWindowsHelloToUnlock);
             var biometricTitle = Helpers.OnPlatform(
-                        iOS: _deviceInfoService.HasFaceIdSupport ? AppResources.VerifyFaceID : AppResources.VerifyFingerprint,
+                        iOS: _deviceInfoService.HasFaceIdSupport ?
+                            AppResources.VerifyFaceID : AppResources.VerifyFingerprint,
                         Android: AppResources.VerifyFingerprint,
                         Windows: AppResources.VerifyWindowsHello);
 
@@ -85,13 +87,14 @@ namespace Bit.App.Pages
             Content = stackLayout;
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
 
             if(_checkFingerprintImmediately)
             {
-                var task = CheckFingerprintAsync();
+                await Task.Delay(Device.RuntimePlatform == Device.Android ? 500 : 200);
+                await CheckFingerprintAsync();
             }
         }
 
@@ -103,8 +106,10 @@ namespace Bit.App.Pages
             }
             _lastAction = DateTime.UtcNow;
 
-            var fingerprintRequest = new AuthenticationRequestConfiguration(
-                _deviceInfoService.HasFaceIdSupport ? AppResources.FaceIDDirection : AppResources.FingerprintDirection)
+            var direction = _deviceInfoService.HasFaceIdSupport ?
+                AppResources.FaceIDDirection : AppResources.FingerprintDirection;
+
+            var fingerprintRequest = new AuthenticationRequestConfiguration(direction)
             {
                 AllowAlternativeAuthentication = true,
                 CancelTitle = AppResources.Cancel,
@@ -114,7 +119,10 @@ namespace Bit.App.Pages
             if(result.Authenticated)
             {
                 _appSettings.Locked = false;
-                await Navigation.PopModalAsync();
+                if(Navigation.ModalStack.Count > 0)
+                {
+                    await Navigation.PopModalAsync();
+                }
             }
             else if(result.Status == FingerprintAuthenticationResultStatus.FallbackRequested)
             {

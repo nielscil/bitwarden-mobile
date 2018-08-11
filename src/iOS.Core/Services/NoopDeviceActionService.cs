@@ -43,9 +43,19 @@ namespace Bit.iOS.Core.Services
             // do nothing
         }
 
-        public void HideLoading()
+        public Task<string> DisplayAlertAsync(string title, string message, string cancel, params string[] buttons)
         {
-            // do nothing
+            return Task.FromResult<string>(null);
+        }
+
+        public Task<string> DisplayPromptAync(string title = null, string description = null, string text = null)
+        {
+            return Task.FromResult<string>(null);
+        }
+
+        public Task HideLoadingAsync()
+        {
+            return Task.FromResult(0);
         }
 
         public Task LaunchAppAsync(string appName, Page page)
@@ -78,9 +88,9 @@ namespace Bit.iOS.Core.Services
             return Task.FromResult(0);
         }
 
-        public void ShowLoading(string text)
+        public Task ShowLoadingAsync(string text)
         {
-            // do nothing
+            return Task.FromResult(0);
         }
 
         public void Toast(string text, bool longDuration = false)

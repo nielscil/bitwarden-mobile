@@ -13,7 +13,8 @@ namespace Bit.App.Pages
         private readonly IGoogleAnalyticsService _googleAnalyticsService;
         private readonly IAppInfoService _appInfoService;
         private readonly IDeviceActionService _deviceActionService;
-        private bool _pageDisappeared = false;
+        private DateTime? _timerStarted = null;
+        private TimeSpan _timerMaxLength = TimeSpan.FromMinutes(5);
 
         public ToolsAutofillServicePage()
         {
@@ -103,7 +104,7 @@ namespace Bit.App.Pages
 
             DisabledStackLayout = new StackLayout
             {
-                Children = { BuildServiceLabel(), statusDisabledLabel, enableImage, goButton, BuildAccessibilityButton() },
+                Children = { BuildServiceLabel(), statusDisabledLabel, enableImage, goButton },
                 Orientation = StackOrientation.Vertical,
                 Spacing = 20,
                 Padding = new Thickness(20, 30),
@@ -112,7 +113,7 @@ namespace Bit.App.Pages
 
             EnabledStackLayout = new StackLayout
             {
-                Children = { BuildServiceLabel(), statusEnabledLabel, useImage, BuildAccessibilityButton() },
+                Children = { BuildServiceLabel(), statusEnabledLabel, useImage },
                 Orientation = StackOrientation.Vertical,
                 Spacing = 20,
                 Padding = new Thickness(20, 30),
@@ -126,12 +127,12 @@ namespace Bit.App.Pages
 
         protected override void OnAppearing()
         {
-            _pageDisappeared = false;
             UpdateEnabled();
+            _timerStarted = DateTime.Now;
             Device.StartTimer(new TimeSpan(0, 0, 2), () =>
             {
                 System.Diagnostics.Debug.WriteLine("Check timer on autofill");
-                if(_pageDisappeared)
+                if(_timerStarted == null || (DateTime.Now - _timerStarted) > _timerMaxLength)
                 {
                     return false;
                 }
@@ -145,7 +146,7 @@ namespace Bit.App.Pages
 
         protected override void OnDisappearing()
         {
-            _pageDisappeared = true;
+            _timerStarted = null;
             base.OnDisappearing();
         }
 
@@ -163,23 +164,6 @@ namespace Bit.App.Pages
                 HorizontalTextAlignment = TextAlignment.Center,
                 LineBreakMode = LineBreakMode.WordWrap,
                 FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label))
-            };
-        }
-
-        private ExtendedButton BuildAccessibilityButton()
-        {
-            return new ExtendedButton
-            {
-                Text = AppResources.AutofillAccessibilityService,
-                Command = new Command(async () =>
-                {
-                    await Navigation.PushAsync(new ToolsAccessibilityServicePage());
-                }),
-                VerticalOptions = LayoutOptions.End,
-                HorizontalOptions = LayoutOptions.Fill,
-                Style = (Style)Application.Current.Resources["btn-primaryAccent"],
-                Uppercase = false,
-                BackgroundColor = Color.Transparent
             };
         }
     }

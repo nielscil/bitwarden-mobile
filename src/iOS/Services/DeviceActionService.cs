@@ -152,6 +152,13 @@ namespace Bit.iOS.Services
                 e.DocumentPicker.DidPickDocument += DocumentPicker_DidPickDocument;
             };
 
+            var root = UIApplication.SharedApplication.KeyWindow.RootViewController;
+            if(picker.PopoverPresentationController != null && root != null)
+            {
+                picker.PopoverPresentationController.SourceView = root.View;
+                picker.PopoverPresentationController.SourceRect = root.View.Bounds;
+            }
+
             controller.PresentViewController(picker, true, null);
             return Task.FromResult(0);
         }
@@ -286,12 +293,14 @@ namespace Bit.iOS.Services
             throw new NotImplementedException();
         }
 
-        public void ShowLoading(string text)
+        public Task ShowLoadingAsync(string text)
         {
             if(_progressAlert != null)
             {
-                HideLoading();
+                HideLoadingAsync().GetAwaiter().GetResult();
             }
+
+            var result = new TaskCompletionSource<int>();
 
             var loadingIndicator = new UIActivityIndicatorView(new CGRect(10, 5, 50, 50));
             loadingIndicator.HidesWhenStopped = true;
@@ -303,24 +312,76 @@ namespace Bit.iOS.Services
             _progressAlert.View.Add(loadingIndicator);
 
             var vc = GetPresentedViewController();
-            vc?.PresentViewController(_progressAlert, true, null);
+            vc?.PresentViewController(_progressAlert, false, () => result.TrySetResult(0));
+            return result.Task;
         }
 
-        public void HideLoading()
+        public Task HideLoadingAsync()
         {
+            var result = new TaskCompletionSource<int>();
             if(_progressAlert == null)
             {
-                return;
+                result.TrySetResult(0);
             }
 
-            _progressAlert.DismissViewController(true, () => { });
+            _progressAlert.DismissViewController(false, () => result.TrySetResult(0));
             _progressAlert.Dispose();
             _progressAlert = null;
+            return result.Task;
         }
 
         public Task LaunchAppAsync(string appName, Page page)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<string> DisplayPromptAync(string title = null, string description = null, string text = null)
+        {
+            var result = new TaskCompletionSource<string>();
+            var alert = UIAlertController.Create(title ?? string.Empty, description, UIAlertControllerStyle.Alert);
+            UITextField input = null;
+            alert.AddAction(UIAlertAction.Create(AppResources.Cancel, UIAlertActionStyle.Cancel, x =>
+            {
+                result.TrySetResult(null);
+            }));
+            alert.AddAction(UIAlertAction.Create(AppResources.Ok, UIAlertActionStyle.Default, x =>
+            {
+                result.TrySetResult(input.Text ?? string.Empty);
+            }));
+            alert.AddTextField(x =>
+            {
+                input = x;
+                input.Text = text ?? string.Empty;
+            });
+            var vc = GetPresentedViewController();
+            vc?.PresentViewController(alert, true, null);
+            return result.Task;
+        }
+
+        public Task<string> DisplayAlertAsync(string title, string message, string cancel, params string[] buttons)
+        {
+            var result = new TaskCompletionSource<string>();
+            var alert = UIAlertController.Create(title ?? string.Empty, message, UIAlertControllerStyle.Alert);
+
+            if(!string.IsNullOrWhiteSpace(cancel))
+            {
+                alert.AddAction(UIAlertAction.Create(cancel, UIAlertActionStyle.Cancel, x =>
+                {
+                    result.TrySetResult(cancel);
+                }));
+            }
+
+            foreach(var button in buttons)
+            {
+                alert.AddAction(UIAlertAction.Create(button, UIAlertActionStyle.Default, x =>
+                {
+                    result.TrySetResult(button);
+                }));
+            }
+
+            var vc = GetPresentedViewController();
+            vc?.PresentViewController(alert, true, null);
+            return result.Task;
         }
 
         private UIViewController GetPresentedViewController()

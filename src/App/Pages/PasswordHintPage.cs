@@ -17,7 +17,7 @@ namespace Bit.App.Pages
         private IDeviceActionService _deviceActionService;
 
         public PasswordHintPage()
-            : base(updateActivity: false)
+            : base(updateActivity: false, requireAuth: false)
         {
             _accountApiRepository = Resolver.Resolve<IAccountsApiRepository>();
             _deviceActionService = Resolver.Resolve<IDeviceActionService>();
@@ -36,7 +36,7 @@ namespace Bit.App.Pages
             EmailCell = new FormEntryCell(AppResources.EmailAddress, entryKeyboard: Keyboard.Email,
                 useLabelAsPlaceholder: true, imageSource: "envelope.png", containerPadding: padding);
 
-            EmailCell.Entry.ReturnType = Enums.ReturnType.Go;
+            EmailCell.Entry.TargetReturnType = Enums.ReturnType.Go;
 
             var table = new ExtendedTableView
             {
@@ -123,9 +123,9 @@ namespace Bit.App.Pages
                 Email = EmailCell.Entry.Text
             };
 
-            _deviceActionService.ShowLoading(AppResources.Submitting);
+            await _deviceActionService.ShowLoadingAsync(AppResources.Submitting);
             var response = await _accountApiRepository.PostPasswordHintAsync(request);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(!response.Succeeded)
             {

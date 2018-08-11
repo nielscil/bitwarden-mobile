@@ -3,15 +3,14 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
+using System;
 
 namespace Bit.Android
 {
-    [Activity(Theme = "@style/BitwardenTheme.Splash",
-        Label = "bitwarden",
-        Icon = "@drawable/icon",
-        WindowSoftInputMode = SoftInput.StateHidden)]
+    [Activity(Theme = "@style/BitwardenTheme.Splash", WindowSoftInputMode = SoftInput.StateHidden)]
     public class AutofillActivity : Activity
     {
+        private DateTime? _lastLaunch = null;
         private string _lastQueriedUri;
 
         public static AutofillCredentials LastCredentials { get; set; }
@@ -93,6 +92,13 @@ namespace Bit.Android
                 return;
             }
 
+            var now = DateTime.UtcNow;
+            if(_lastLaunch.HasValue && (now - _lastLaunch.Value <= TimeSpan.FromSeconds(2)))
+            {
+                return;
+            }
+
+            _lastLaunch = now;
             var intent = new Intent(this, typeof(MainActivity));
             if(!callingIntent.Flags.HasFlag(ActivityFlags.LaunchedFromHistory))
             {

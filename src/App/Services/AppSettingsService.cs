@@ -26,6 +26,18 @@ namespace Bit.App.Services
             }
         }
 
+        public int FailedPinAttempts
+        {
+            get
+            {
+                return _settings.GetValueOrDefault(Constants.FailedPinAttempts, 0);
+            }
+            set
+            {
+                _settings.AddOrUpdateValue(Constants.FailedPinAttempts, value);
+            }
+        }
+
         public DateTime LastActivity
         {
             get
@@ -182,6 +194,18 @@ namespace Bit.App.Services
                 }
 
                 _settings.AddOrUpdateValue(Constants.IconsUrl, value);
+            }
+        }
+
+        public bool ClearCiphersCache
+        {
+            get
+            {
+                return _settings.GetValueOrDefault(Constants.ClearCiphersCache, false);
+            }
+            set
+            {
+                _settings.AddOrUpdateValue(Constants.ClearCiphersCache, value);
             }
         }
     }

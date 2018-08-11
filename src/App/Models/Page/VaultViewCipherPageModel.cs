@@ -3,22 +3,27 @@ using System.ComponentModel;
 using Xamarin.Forms;
 using System.Collections.Generic;
 using Bit.App.Enums;
+using Bit.App.Resources;
 
 namespace Bit.App.Models.Page
 {
     public class VaultViewCipherPageModel : INotifyPropertyChanged
     {
-        private string _name, _notes;
+        private const string MaskedPasswordString = "••••••••";
+
+        private string _name, _notes, _reivisonDate, _passwordReivisonDate;
         private List<Attachment> _attachments;
         private List<Field> _fields;
+        private List<LoginUri> _loginUris;
 
         // Login
-        private string _loginUsername, _loginPassword, _loginUri, _loginTotpCode;
+        private string _loginUsername, _loginPassword, _loginTotpCode;
         private int _loginTotpSec = 30;
         private bool _loginRevealPassword;
 
         // Card
         private string _cardName, _cardNumber, _cardBrand, _cardExpMonth, _cardExpYear, _cardCode;
+        private bool _cardRevealCardCode;
 
         // Identity
         private string _idFirstName, _idLastName, _idMiddleName, _idCompany, _idEmail, _idPhone, _idUsername,
@@ -38,6 +43,28 @@ namespace Bit.App.Models.Page
                 PropertyChanged(this, new PropertyChangedEventArgs(nameof(Name)));
             }
         }
+
+        public string RevisionDate
+        {
+            get => _reivisonDate;
+            set
+            {
+                _reivisonDate = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(RevisionDate)));
+            }
+        }
+
+        public string PasswordRevisionDate
+        {
+            get => _passwordReivisonDate;
+            set
+            {
+                _passwordReivisonDate = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(PasswordRevisionDate)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(ShowPasswordRevisionDate)));
+            }
+        }
+        public bool ShowPasswordRevisionDate => !string.IsNullOrWhiteSpace(PasswordRevisionDate);
 
         public string Notes
         {
@@ -112,73 +139,21 @@ namespace Bit.App.Models.Page
             }
         }
         public string MaskedLoginPassword => RevealLoginPassword ?
-            LoginPassword : LoginPassword == null ? null : new string('•', LoginPassword.Length);
+            LoginPassword : LoginPassword == null ? null : MaskedPasswordString;
         public ImageSource LoginShowHideImage => RevealLoginPassword ?
             ImageSource.FromFile("eye_slash.png") : ImageSource.FromFile("eye.png");
 
-        public string LoginUri
+        public List<LoginUri> LoginUris
         {
-            get => _loginUri;
+            get => _loginUris;
             set
             {
-                _loginUri = value;
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(LoginUri)));
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(LoginUriHost)));
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(ShowLoginUri)));
-                PropertyChanged(this, new PropertyChangedEventArgs(nameof(ShowLoginLaunch)));
+                _loginUris = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(LoginUris)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(ShowLoginUris)));
             }
         }
-        public bool ShowLoginUri => !string.IsNullOrWhiteSpace(LoginUri);
-        public bool ShowLoginLaunch
-        {
-            get
-            {
-                if(!ShowLoginUri)
-                {
-                    return false;
-                }
-
-                if(Device.RuntimePlatform == Device.Android && !LoginUri.StartsWith("http") &&
-                    !LoginUri.StartsWith("androidapp://"))
-                {
-                    return false;
-                }
-
-                if(Device.RuntimePlatform != Device.Android && !LoginUri.StartsWith("http"))
-                {
-                    return false;
-                }
-
-                if(!Uri.TryCreate(LoginUri, UriKind.Absolute, out Uri uri))
-                {
-                    return false;
-                }
-
-                return true;
-            }
-        }
-        public string LoginUriHost
-        {
-            get
-            {
-                if(!ShowLoginUri)
-                {
-                    return null;
-                }
-
-                if(!Uri.TryCreate(LoginUri, UriKind.Absolute, out Uri uri))
-                {
-                    return LoginUri;
-                }
-
-                if(DomainName.TryParseBaseDomain(uri.Host, out string domain))
-                {
-                    return domain;
-                }
-
-                return uri.Host;
-            }
-        }
+        public bool ShowLoginUris => (LoginUris?.Count ?? 0) > 0;
 
         public string LoginTotpCode
         {
@@ -203,8 +178,18 @@ namespace Bit.App.Models.Page
         public bool LoginTotpLow => LoginTotpSecond <= 7;
         public Color LoginTotpColor => !string.IsNullOrWhiteSpace(LoginTotpCode) && LoginTotpLow ?
             Color.Red : Color.Black;
-        public string LoginTotpCodeFormatted => !string.IsNullOrWhiteSpace(LoginTotpCode) ?
-            string.Format("{0} {1}", LoginTotpCode.Substring(0, 3), LoginTotpCode.Substring(3)) : null;
+        public string LoginTotpCodeFormatted
+        {
+            get
+            {
+                if(string.IsNullOrWhiteSpace(LoginTotpCode) || LoginTotpCode.Length < 5)
+                {
+                    return LoginTotpCode;
+                }
+                var half = (int)Math.Floor((double)LoginTotpCode.Length / 2);
+                return string.Format("{0} {1}", LoginTotpCode.Substring(0, half), LoginTotpCode.Substring(half));
+            }
+        }
 
         // Card
         public string CardName
@@ -298,6 +283,22 @@ namespace Bit.App.Models.Page
             }
         }
         public bool ShowCardCode => !string.IsNullOrWhiteSpace(CardCode);
+        public bool RevealCardCode
+        {
+            get => _cardRevealCardCode;
+            set
+            {
+                _cardRevealCardCode = value;
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(RevealCardCode)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(MaskedCardCode)));
+                PropertyChanged(this, new PropertyChangedEventArgs(nameof(CardCodeShowHideImage)));
+            }
+        }
+        public string MaskedCardCode => RevealCardCode ?
+            CardCode : CardCode == null ? null : new String('•', CardCode.Length);
+
+        public ImageSource CardCodeShowHideImage => RevealCardCode ?
+            ImageSource.FromFile("eye_slash.png") : ImageSource.FromFile("eye.png");
 
         // Identity
 
@@ -554,6 +555,20 @@ namespace Bit.App.Models.Page
         {
             Name = cipher.Name?.Decrypt(cipher.OrganizationId);
             Notes = cipher.Notes?.Decrypt(cipher.OrganizationId);
+            var revisionDate = DateTime.SpecifyKind(cipher.RevisionDate, DateTimeKind.Utc).ToLocalTime();
+            RevisionDate = revisionDate.ToShortDateString() + " " + revisionDate.ToShortTimeString();
+
+            if(cipher.PasswordRevisionDisplayDate.HasValue)
+            {
+                var passwordRevisionDate = DateTime.SpecifyKind(
+                    cipher.PasswordRevisionDisplayDate.Value, DateTimeKind.Utc).ToLocalTime();
+                PasswordRevisionDate = passwordRevisionDate.ToShortDateString() + " " +
+                    passwordRevisionDate.ToShortTimeString();
+            }
+            else
+            {
+                PasswordRevisionDate = null;
+            }
 
             if(cipher.Attachments != null)
             {
@@ -592,7 +607,7 @@ namespace Bit.App.Models.Page
             }
             else
             {
-                cipher.Fields = null;
+                Fields = null;
             }
 
             switch(cipher.Type)
@@ -600,7 +615,23 @@ namespace Bit.App.Models.Page
                 case CipherType.Login:
                     LoginUsername = cipher.Login.Username?.Decrypt(cipher.OrganizationId);
                     LoginPassword = cipher.Login.Password?.Decrypt(cipher.OrganizationId);
-                    LoginUri = cipher.Login.Uri?.Decrypt(cipher.OrganizationId);
+
+                    if(cipher.Login.Uris != null)
+                    {
+                        var uris = new List<LoginUri>();
+                        foreach(var uri in cipher.Login.Uris)
+                        {
+                            uris.Add(new LoginUri
+                            {
+                                Value = uri.Uri?.Decrypt(cipher.OrganizationId)
+                            });
+                        }
+                        LoginUris = uris;
+                    }
+                    else
+                    {
+                        LoginUris = null;
+                    }
                     break;
                 case CipherType.Card:
                     CardName = cipher.Card.CardholderName?.Decrypt(cipher.OrganizationId);
@@ -650,20 +681,67 @@ namespace Bit.App.Models.Page
 
             public string Name { get; set; }
             public string Value { get; set; }
-            public string MaskedValue
+            public string MaskedValue => MaskedPasswordString;
+            public FieldType Type { get; set; }
+            public bool Revealed { get; set; }
+        }
+
+        public class LoginUri
+        {
+            public string Value { get; set; }
+            public bool ShowLaunch
             {
                 get
                 {
-                    if(_maskedValue == null && Value != null)
+                    if(string.IsNullOrWhiteSpace(Value))
                     {
-                        _maskedValue = new string('•', Value.Length);
+                        return false;
                     }
 
-                    return _maskedValue;
+                    if(Device.RuntimePlatform == Device.Android && !IsWebsite && !IsApp)
+                    {
+                        return false;
+                    }
+
+                    if(Device.RuntimePlatform != Device.Android && !IsWebsite)
+                    {
+                        return false;
+                    }
+
+                    if(!Uri.TryCreate(Value, UriKind.Absolute, out Uri uri))
+                    {
+                        return false;
+                    }
+
+                    return true;
                 }
             }
-            public FieldType Type { get; set; }
-            public bool Revealed { get; set; }
+            public string Host
+            {
+                get
+                {
+                    if(string.IsNullOrWhiteSpace(Value))
+                    {
+                        return null;
+                    }
+
+                    if(!Uri.TryCreate(Value, UriKind.Absolute, out Uri uri))
+                    {
+                        return Value;
+                    }
+
+                    if(DomainName.TryParseBaseDomain(uri.Host, out string domain))
+                    {
+                        return domain;
+                    }
+
+                    return uri.Host;
+                }
+            }
+            public string Label => IsWebsite ? AppResources.Website : AppResources.URI;
+            public bool IsWebsite => Value == null ? false :
+                Value.StartsWith("http://") || Value.StartsWith("https://");
+            public bool IsApp => Value == null ? false : Value.StartsWith(Constants.AndroidAppProtocol);
         }
     }
 }

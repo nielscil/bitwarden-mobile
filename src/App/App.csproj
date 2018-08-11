@@ -5,6 +5,15 @@
     <RootNamespace>Bit.App</RootNamespace>
     <AssemblyName>BitwardenApp</AssemblyName>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <Configurations>Debug;Release;FDroid</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)' == 'FDroid|netstandard2.0|AnyCPU'">
+    <DefineConstants>TRACE;FDROID;NETSTANDARD2_0</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)' == 'FDroid|net471|AnyCPU'">
+    <DefineConstants>TRACE;FDROID;NET471</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,17 +25,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HockeySDK.Xamarin" Version="5.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="HockeySDK.Xamarin" Version="5.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="PCLCrypto" Version="2.0.147" />
-    <PackageReference Include="Plugin.Fingerprint" Version="1.4.6-beta4" />
+    <PackageReference Include="Plugin.Fingerprint" Version="1.4.7" />
     <PackageReference Include="Refractored.FloatingActionButtonForms" Version="2.1.0" />
     <PackageReference Include="sqlite-net-pcl" Version="1.5.166-beta" />
     <PackageReference Include="System.Net.Http" Version="4.3.3" />
-    <PackageReference Include="Xam.Plugin.Connectivity" Version="3.0.3" />
+    <PackageReference Include="Xam.Plugin.Connectivity" Version="3.2.0" />
     <PackageReference Include="Xam.Plugins.Settings" Version="3.1.1" />
-    <PackageReference Include="Xamarin.FFImageLoading.Forms" Version="2.3.3" />
-    <PackageReference Include="Xamarin.Forms" Version="2.5.0.121934" />
+    <PackageReference Include="Xamarin.FFImageLoading.Forms" Version="2.4.3.840" />
+    <PackageReference Include="Xamarin.Forms" Version="3.1.0.697729" />
     <PackageReference Include="XLabs.IoC" Version="2.0.5782" />
     <PackageReference Include="ZXing.Net.Mobile.Forms" Version="2.1.47" />
   </ItemGroup>

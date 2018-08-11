@@ -20,7 +20,7 @@ namespace Bit.App.Pages
         private HomePage _homePage;
 
         public RegisterPage(HomePage homePage)
-            : base(updateActivity: false)
+            : base(updateActivity: false, requireAuth: false)
         {
             _homePage = homePage;
             _cryptoService = Resolver.Resolve<ICryptoService>();
@@ -60,7 +60,7 @@ namespace Bit.App.Pages
                 entryKeyboard: Keyboard.Email, useLabelAsPlaceholder: true, imageSource: "envelope.png",
                 containerPadding: padding);
 
-            PasswordHintCell.Entry.ReturnType = Enums.ReturnType.Done;
+            PasswordHintCell.Entry.TargetReturnType = Enums.ReturnType.Done;
 
             var table = new FormTableView(this)
             {
@@ -187,7 +187,7 @@ namespace Bit.App.Pages
 
             if(ConfirmPasswordCell.Entry.Text != PasswordCell.Entry.Text)
             {
-                await DisplayAlert(AppResources.AnErrorHasOccurred, AppResources.MasterPasswordLengthValMessage,
+                await DisplayAlert(AppResources.AnErrorHasOccurred, AppResources.MasterPasswordConfirmationValMessage,
                     AppResources.Ok);
                 return;
             }
@@ -204,9 +204,9 @@ namespace Bit.App.Pages
                 Key = encKey.EncryptedString
             };
 
-            _deviceActionService.ShowLoading(AppResources.CreatingAccount);
+            await _deviceActionService.ShowLoadingAsync(AppResources.CreatingAccount);
             var response = await _accountsApiRepository.PostRegisterAsync(request);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(!response.Succeeded)
             {

@@ -5,6 +5,7 @@ namespace Bit.App.Abstractions
     public interface IAppSettingsService
     {
         bool Locked { get; set; }
+        int FailedPinAttempts { get; set; }
         DateTime LastActivity { get; set; }
         DateTime LastCacheClear { get; set; }
         bool AutofillPersistNotification { get; set; }
@@ -16,5 +17,6 @@ namespace Bit.App.Abstractions
         string ApiUrl { get; set; }
         string IdentityUrl { get; set; }
         string IconsUrl { get; set; }
+        bool ClearCiphersCache { get; set; }
     }
 }

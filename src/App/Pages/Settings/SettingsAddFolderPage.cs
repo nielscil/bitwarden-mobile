@@ -85,9 +85,9 @@ namespace Bit.App.Pages
                     Name = NameCell.Entry.Text.Encrypt()
                 };
 
-                _deviceActionService.ShowLoading(AppResources.Saving);
+                await _deviceActionService.ShowLoadingAsync(AppResources.Saving);
                 var saveResult = await _folderService.SaveAsync(folder);
-                _deviceActionService.HideLoading();
+                await _deviceActionService.HideLoadingAsync();
 
                 if(saveResult.Succeeded)
                 {
@@ -118,10 +118,6 @@ namespace Bit.App.Pages
         {
             base.OnAppearing();
             NameCell.InitEvents();
-            if(!_connectivity.IsConnected)
-            {
-                AlertNoConnection();
-            }
         }
 
         protected override void OnDisappearing()

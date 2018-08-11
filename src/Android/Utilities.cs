@@ -3,20 +3,12 @@ using Android.App;
 using Android.Content;
 using Java.Security;
 using System.IO;
-using Android.Nfc;
 using Android.Provider;
 
 namespace Bit.Android
 {
     public static class Utilities
     {
-        public static bool NfcEnabled()
-        {
-            var manager = (NfcManager)Application.Context.GetSystemService("nfc");
-            var adapter = manager.DefaultAdapter;
-            return adapter != null && adapter.IsEnabled;
-        }
-
         public static void SendCrashEmail(Exception e, bool includeSecurityProviders = true)
         {
             SendCrashEmail(e.Message + "\n\n" + e.StackTrace, includeSecurityProviders);
@@ -38,7 +30,7 @@ namespace Bit.Android
 
             emailIntent.SetType("plain/text");
             emailIntent.PutExtra(Intent.ExtraEmail, new String[] { "hello@bitwarden.com" });
-            emailIntent.PutExtra(Intent.ExtraSubject, "bitwarden Crash Report");
+            emailIntent.PutExtra(Intent.ExtraSubject, "Bitwarden Crash Report");
             emailIntent.PutExtra(Intent.ExtraText, FormatText(text, includeSecurityProviders));
 
             Application.Context.StartActivity(Intent.CreateChooser(emailIntent, "Send mail..."));
@@ -50,7 +42,7 @@ namespace Bit.Android
 
             emailIntent.SetType("plain/text");
             emailIntent.PutExtra(Intent.ExtraEmail, new String[] { "hello@bitwarden.com" });
-            emailIntent.PutExtra(Intent.ExtraSubject, "bitwarden Crash Report");
+            emailIntent.PutExtra(Intent.ExtraSubject, "Bitwarden Crash Report");
             emailIntent.PutExtra(Intent.ExtraText, FormatText(text, includeSecurityProviders));
 
             act.StartActivity(Intent.CreateChooser(emailIntent, "Send mail..."));
@@ -68,7 +60,7 @@ namespace Bit.Android
 
         private static string FormatText(string text, bool includeSecurityProviders = true)
         {
-            var crashMessage = "bitwarden has crashed. Please send this email to our support team so that we can help " +
+            var crashMessage = "Bitwarden has crashed. Please send this email to our support team so that we can help " +
                 "resolve the problem for you. Thank you.";
 
             text = crashMessage + "\n\n =============================================== \n\n" + text;

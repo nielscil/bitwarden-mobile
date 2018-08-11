@@ -21,7 +21,7 @@ namespace Bit.App.Pages
         private readonly string _email;
 
         public LoginPage(string email = null)
-            : base(updateActivity: false)
+            : base(updateActivity: false, requireAuth: false)
         {
             _email = email;
             _authService = Resolver.Resolve<IAuthService>();
@@ -62,7 +62,7 @@ namespace Bit.App.Pages
                 EmailCell.Entry.Text = lastLoginEmail;
             }
 
-            PasswordCell.Entry.ReturnType = Enums.ReturnType.Go;
+            PasswordCell.Entry.TargetReturnType = Enums.ReturnType.Go;
 
             var table = new ExtendedTableView
             {
@@ -112,7 +112,7 @@ namespace Bit.App.Pages
                 }));
             }
 
-            var loginToolbarItem = new ToolbarItem(AppResources.LogIn, Helpers.ToolbarImage("login.png"), async () =>
+            var loginToolbarItem = new ToolbarItem(AppResources.LogIn, Helpers.ToolbarImage("ion_chevron_right.png"), async () =>
             {
                 await LogIn();
             }, ToolbarItemOrder.Default, 0);
@@ -179,9 +179,9 @@ namespace Bit.App.Pages
                 return;
             }
 
-            _deviceActionService.ShowLoading(AppResources.LoggingIn);
+            await _deviceActionService.ShowLoadingAsync(AppResources.LoggingIn);
             var result = await _authService.TokenPostAsync(EmailCell.Entry.Text, PasswordCell.Entry.Text);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(!result.Success)
             {

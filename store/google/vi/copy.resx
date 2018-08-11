@@ -118,21 +118,21 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Title" xml:space="preserve">
-    <value>Trình quản lý mật khẩu bitwarden</value>
+    <value>Trình quản lý mật khẩu Bitwarden</value>
     <comment>Max 30 characters</comment>
   </data>
   <data name="ShortDescription" xml:space="preserve">
-    <value>bitwarden là một trình quản lý đăng nhập và mật khẩu giúp bạn giữ an toàn khi trực tuyến.</value>
+    <value>Bitwarden là một trình quản lý đăng nhập và mật khẩu giúp bạn giữ an toàn khi trực tuyến.</value>
     <comment>Max 80 characters</comment>
   </data>
   <data name="FullDesciption" xml:space="preserve">
-    <value>bitwarden là cách dễ dàng và an toàn nhất để lưu trữ tất cả các thông tin đăng nhập cùng mật khẩu và giữ chúng được đồng bộ giữa tất cả các thiết bị của bạn.
+    <value>Bitwarden là cách dễ dàng và an toàn nhất để lưu trữ mọi thông tin đăng nhập và mật khẩu của bạn và giữ chúng được đồng bộ giữa tất cả các thiết bị của bạn.
 
-Rò rỉ mật khẩu là một vấn đề rất nghiêm trọng. Các trang web và ứng dụng mà bạn sử dụng đang bị tấn công mỗi ngày. Vi phạm an ninh mạng xảy ra khiến mật khẩu của bạn bị đánh cắp. Khi bạn sử dụng cùng một mật khẩu trên nhiều ứng dụng và trang web, tin tặc có thể dễ dàng truy cập vào email, tài khoản ngân hàng và các tài khoản quan trọng khác của bạn.
+Việc bị lộ mật khẩu là một vấn đề rất nghiêm trọng. Các trang web và ứng dụng mà bạn sử dụng đang bị tấn công mỗi ngày. Những cuộc tấn công của các tin tặc có thể khiến bạn bị lộ các thông tin đăng nhập. Khi bạn sử dụng cùng một mật khẩu trên nhiều ứng dụng và trang web, tin tặc có thể dễ dàng truy cập vào email, tài khoản ngân hàng và các tài khoản quan trọng khác của bạn.
 
-Các chuyên gia bảo mật khuyên bạn nên sử dụng một mật khẩu được tạo ngẫu nhiên cho mỗi tài khoản của bạn. Nhưng làm thế nào để bạn quản lý tất cả những mật khẩu đó? bitwarden giúp bạn tạo, lưu trữ và truy cập tất cả mật khẩu một cách dễ dàng.
+Các chuyên gia bảo mật khuyên bạn nên sử dụng một mật khẩu được tạo ngẫu nhiên cho mỗi tài khoản của bạn. Nhưng làm thế nào để bạn quản lý tất cả những mật khẩu đó? Bitwarden giúp bạn tạo, lưu trữ và truy cập tất cả mật khẩu một cách dễ dàng.
 
-bitwarden lưu trữ tất cả các thông tin đăng nhập trong một kho mật khẩu được mã hóa và đồng bộ trên tất cả các thiết bị của bạn. Vì nó được mã hóa đầy đủ trước khi nó rời khỏi thiết bị của bạn nên chỉ có bạn mới có thể truy cập dữ liệu của mình. Ngay cả nhóm nghiên cứu tại bitwarden cũng không thể đọc được dữ liệu của bạn khi họ muốn. Dữ liệu của bạn được bảo vệ bằng mã hóa AES-256 bit, hàm băm và PBKDF2 SHA-256.</value>
+Bitwarden lưu trữ tất cả các thông tin đăng nhập của bạn trong một kho dữ liệu được mã hóa và đồng bộ trên tất cả các thiết bị của bạn. Vì nó được mã hóa đầy đủ trước khi nó rời khỏi thiết bị của bạn nên chỉ có bạn mới có thể truy cập vào dữ liệu của mình. Ngay cả nhóm phát triển Bitwarden cũng không thể đọc được dữ liệu của bạn kể cả khi họ muốn. Dữ liệu của bạn được bảo vệ bằng các giải pháp mã hóa tối tân nhất hiện nay như mã hóa AES-256 bit, hàm băm và PBKDF2 SHA-256.</value>
     <comment>Max 4000 characters</comment>
   </data>
   <data name="FeatureGraphic" xml:space="preserve">
@@ -145,7 +145,7 @@ bitwarden lưu trữ tất cả các thông tin đăng nhập trong một kho m�
     <value>Tự động tạo mật khẩu mạnh, ngẫu nhiên và an toàn</value>
   </data>
   <data name="Screenshot3" xml:space="preserve">
-    <value>Bảo vệ kho mật khẩu của bạn bằng dấu vân tay, mã PIN hoặc mật khẩu chính</value>
+    <value>Bảo vệ kho mật khẩu của bạn bằng dấu vân tay, mã PIN hoặc mật khẩu chủ</value>
   </data>
   <data name="Screenshot4" xml:space="preserve">
     <value>Nhanh chóng tự động điền thông tin đăng nhập bên trong trình duyệt web và các ứng dụng khác của bạn</value>

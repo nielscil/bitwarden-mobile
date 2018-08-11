@@ -21,15 +21,14 @@ using Bit.App.Enums;
 
 namespace Bit.Android
 {
-    [Activity(Label = "bitwarden",
-        Icon = "@drawable/icon",
-        ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation,
-        Exported = false)]
+    [Activity(ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation, Exported = false)]
     public class MainActivity : FormsAppCompatActivity
     {
         private const string HockeyAppId = "d3834185b4a643479047b86c65293d42";
         private Java.Util.Regex.Pattern _otpPattern = Java.Util.Regex.Pattern.Compile("^.*?([cbdefghijklnrtuv]{32,64})$");
         private IDeviceActionService _deviceActionService;
+        private IDeviceInfoService _deviceInfoService;
+        private IAppSettingsService _appSettingsService;
         private ISettings _settings;
         private AppOptions _appOptions;
 
@@ -61,8 +60,10 @@ namespace Bit.Android
             var appIdService = Resolver.Resolve<IAppIdService>();
             var authService = Resolver.Resolve<IAuthService>();
 
+#if !FDROID
             HockeyApp.Android.CrashManager.Register(this, HockeyAppId,
                 new HockeyAppCrashManagerListener(appIdService, authService));
+#endif
 
             Forms.Init(this, bundle);
 
@@ -70,6 +71,8 @@ namespace Bit.Android
                 .SetValue(null, Color.FromHex("d2d6de"));
 
             _deviceActionService = Resolver.Resolve<IDeviceActionService>();
+            _deviceInfoService = Resolver.Resolve<IDeviceInfoService>();
+            _appSettingsService = Resolver.Resolve<IAppSettingsService>();
             _settings = Resolver.Resolve<ISettings>();
             _appOptions = GetOptions();
             LoadApplication(new App.App(
@@ -82,7 +85,7 @@ namespace Bit.Android
                 Resolver.Resolve<ILockService>(),
                 Resolver.Resolve<ILocalizeService>(),
                 Resolver.Resolve<IAppInfoService>(),
-                Resolver.Resolve<IAppSettingsService>(),
+                _appSettingsService,
                 _deviceActionService));
 
             if(_appOptions?.Uri == null)
@@ -135,9 +138,21 @@ namespace Bit.Android
             // ref https://bugzilla.xamarin.com/show_bug.cgi?id=36907
             Task.Delay(10).Wait();
 
-            if(Utilities.NfcEnabled())
+            if(_deviceInfoService.NfcEnabled)
             {
-                MessagingCenter.Send(Xamarin.Forms.Application.Current, "ResumeYubiKey");
+                try
+                {
+                    MessagingCenter.Send(Xamarin.Forms.Application.Current, "ResumeYubiKey");
+                }
+                catch(Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine(e);
+                }
+            }
+
+            if(_appSettingsService.Locked)
+            {
+                MessagingCenter.Send(Xamarin.Forms.Application.Current, "Resumed", false);
             }
         }
 
@@ -200,7 +215,7 @@ namespace Bit.Android
 
         private void ListenYubiKey(bool listen)
         {
-            if(!Utilities.NfcEnabled())
+            if(!_deviceInfoService.NfcEnabled)
             {
                 return;
             }
@@ -218,8 +233,12 @@ namespace Bit.Android
                 ndef.AddDataScheme("https");
                 var filters = new IntentFilter[] { ndef };
 
-                // register for foreground dispatch so we'll receive tags according to our intent filters
-                adapter.EnableForegroundDispatch(this, pendingIntent, filters, null);
+                try
+                {
+                    // register for foreground dispatch so we'll receive tags according to our intent filters
+                    adapter.EnableForegroundDispatch(this, pendingIntent, filters, null);
+                }
+                catch { }
             }
             else
             {

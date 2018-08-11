@@ -18,6 +18,7 @@ namespace Bit.App.Pages
         private readonly IGoogleAnalyticsService _googleAnalyticsService;
         private readonly Action<string> _passwordValueAction;
         private readonly bool _fromAutofill;
+        private readonly MainPage _mainPage;
 
         public ToolsPasswordGeneratorPage(Action<string> passwordValueAction = null, bool fromAutofill = false)
         {
@@ -29,6 +30,12 @@ namespace Bit.App.Pages
             _fromAutofill = fromAutofill;
 
             Init();
+        }
+
+        public ToolsPasswordGeneratorPage(MainPage mainPage)
+            : this()
+        {
+            _mainPage = mainPage;
         }
 
         public PasswordGeneratorPageModel Model { get; private set; } = new PasswordGeneratorPageModel();
@@ -64,9 +71,12 @@ namespace Bit.App.Pages
 
             SliderCell = new SliderViewCell(this, _passwordGenerationService, _settings);
 
-            var buttonColor = Color.FromHex("3c8dbc");
-            RegenerateCell = new ExtendedTextCell { Text = AppResources.RegeneratePassword, TextColor = buttonColor };
-            CopyCell = new ExtendedTextCell { Text = AppResources.CopyPassword, TextColor = buttonColor };
+            RegenerateCell = new ExtendedTextCell
+            {
+                Text = AppResources.RegeneratePassword,
+                TextColor = Colors.Primary
+            };
+            CopyCell = new ExtendedTextCell { Text = AppResources.CopyPassword, TextColor = Colors.Primary };
 
             UppercaseCell = new ExtendedSwitchCell
             {
@@ -253,6 +263,17 @@ namespace Bit.App.Pages
             SliderCell.Dispose();
         }
 
+        protected override bool OnBackButtonPressed()
+        {
+            if(Device.RuntimePlatform == Device.Android && _mainPage != null)
+            {
+                _mainPage.ResetToVaultPage();
+                return true;
+            }
+
+            return base.OnBackButtonPressed();
+        }
+
         private void RegenerateCell_Tapped(object sender, EventArgs e)
         {
             Model.Password = _passwordGenerationService.GeneratePassword();
@@ -379,7 +400,9 @@ namespace Bit.App.Pages
                 LengthSlider = new Slider(5, 64, _settings.GetValueOrDefault(Constants.PasswordGeneratorLength, 10))
                 {
                     HorizontalOptions = LayoutOptions.FillAndExpand,
-                    VerticalOptions = LayoutOptions.CenterAndExpand
+                    VerticalOptions = LayoutOptions.CenterAndExpand,
+                    MaximumTrackColor = Color.LightGray,
+                    MinimumTrackColor = Color.LightGray,
                 };
 
                 Value = new Label
@@ -387,7 +410,8 @@ namespace Bit.App.Pages
                     FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label)),
                     HorizontalOptions = LayoutOptions.End,
                     VerticalOptions = LayoutOptions.CenterAndExpand,
-                    Style = (Style)Application.Current.Resources["text-muted"]
+                    Style = (Style)Application.Current.Resources["text-muted"],
+                    FontFamily = Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier"),
                 };
 
                 Value.SetBinding(Label.TextProperty, nameof(PasswordGeneratorPageModel.Length));

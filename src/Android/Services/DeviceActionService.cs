@@ -24,6 +24,7 @@ using Bit.Android.Autofill;
 using System.Linq;
 using Plugin.Settings.Abstractions;
 using Android.Views.InputMethods;
+using Android.Widget;
 
 namespace Bit.Android.Services
 {
@@ -302,9 +303,9 @@ namespace Bit.Android.Services
 
         public void DismissKeyboard()
         {
-            var activity = (MainActivity)CurrentContext;
             try
             {
+                var activity = (MainActivity)CurrentContext;
                 var imm = (InputMethodManager)activity.GetSystemService(Context.InputMethodService);
                 imm.HideSoftInputFromWindow(activity.CurrentFocus.WindowToken, 0);
             }
@@ -424,36 +425,167 @@ namespace Bit.Android.Services
 
         public void OpenAutofillSettings()
         {
-            var activity = (MainActivity)CurrentContext;
-            var intent = new Intent(Settings.ActionRequestSetAutofillService);
-            intent.SetData(global::Android.Net.Uri.Parse("package:com.x8bit.bitwarden"));
-            activity.StartActivity(intent);
+            try
+            {
+                var activity = (MainActivity)CurrentContext;
+                var intent = new Intent(Settings.ActionRequestSetAutofillService);
+                intent.SetData(global::Android.Net.Uri.Parse("package:com.x8bit.bitwarden"));
+                activity.StartActivity(intent);
+            }
+            catch(ActivityNotFoundException)
+            {
+                var alertBuilder = new AlertDialog.Builder((MainActivity)CurrentContext);
+                alertBuilder.SetMessage(AppResources.BitwardenAutofillGoToSettings);
+                alertBuilder.SetCancelable(true);
+                alertBuilder.SetPositiveButton(AppResources.Ok, (sender, args) =>
+                {
+                    (sender as AlertDialog)?.Cancel();
+                });
+                alertBuilder.Create().Show();
+            }
         }
 
-        public void ShowLoading(string text)
+        public async Task ShowLoadingAsync(string text)
         {
             if(_progressDialog != null)
             {
-                HideLoading();
+                await HideLoadingAsync();
             }
 
             var activity = (MainActivity)CurrentContext;
             _progressDialog = new ProgressDialog(activity);
             _progressDialog.SetMessage(text);
-            _progressDialog.SetCancelable(true);
+            _progressDialog.SetCancelable(false);
             _progressDialog.Show();
         }
 
-        public void HideLoading()
+        public Task HideLoadingAsync()
         {
-            if(_progressDialog == null)
+            if(_progressDialog != null)
             {
-                return;
+                _progressDialog.Dismiss();
+                _progressDialog.Dispose();
+                _progressDialog = null;
             }
 
-            _progressDialog.Dismiss();
-            _progressDialog.Dispose();
-            _progressDialog = null;
+            return Task.FromResult(0);
+        }
+
+        public Task<string> DisplayPromptAync(string title = null, string description = null, string text = null)
+        {
+            var activity = (MainActivity)CurrentContext;
+            if(activity == null)
+            {
+                return Task.FromResult<string>(null);
+            }
+
+            var alertBuilder = new AlertDialog.Builder(activity);
+            alertBuilder.SetTitle(title);
+            alertBuilder.SetMessage(description);
+
+            var input = new EditText(activity)
+            {
+                InputType = global::Android.Text.InputTypes.ClassText
+            };
+
+            if(text == null)
+            {
+                text = string.Empty;
+            }
+
+            input.Text = text;
+            input.SetSelection(text.Length);
+
+            alertBuilder.SetView(input);
+
+            var result = new TaskCompletionSource<string>();
+            alertBuilder.SetPositiveButton(AppResources.Ok, (sender, args) =>
+            {
+                result.TrySetResult(input.Text ?? string.Empty);
+            });
+
+            alertBuilder.SetNegativeButton(AppResources.Cancel, (sender, args) =>
+            {
+                result.TrySetResult(null);
+            });
+
+            var alert = alertBuilder.Create();
+            alert.Window.SetSoftInputMode(global::Android.Views.SoftInput.StateVisible);
+            alert.Show();
+            return result.Task;
+        }
+
+        public Task<string> DisplayAlertAsync(string title, string message, string cancel, params string[] buttons)
+        {
+            var activity = (MainActivity)CurrentContext;
+            if(activity == null)
+            {
+                return Task.FromResult<string>(null);
+            }
+
+            var result = new TaskCompletionSource<string>();
+            var alertBuilder = new AlertDialog.Builder(activity);
+            alertBuilder.SetTitle(title);
+
+            if(!string.IsNullOrWhiteSpace(message))
+            {
+                if(buttons != null && buttons.Length > 2)
+                {
+                    if(!string.IsNullOrWhiteSpace(title))
+                    {
+                        alertBuilder.SetTitle($"{title}: {message}");
+                    }
+                    else
+                    {
+                        alertBuilder.SetTitle(message);
+                    }
+                }
+                else
+                {
+                    alertBuilder.SetMessage(message);
+                }
+            }
+
+            if(buttons != null)
+            {
+                if(buttons.Length > 2)
+                {
+                    alertBuilder.SetItems(buttons, (sender, args) =>
+                    {
+                        result.TrySetResult(buttons[args.Which]);
+                    });
+                }
+                else
+                {
+                    if(buttons.Length > 0)
+                    {
+                        alertBuilder.SetPositiveButton(buttons[0], (sender, args) =>
+                        {
+                            result.TrySetResult(buttons[0]);
+                        });
+                    }
+                    if(buttons.Length > 1)
+                    {
+                        alertBuilder.SetNeutralButton(buttons[1], (sender, args) =>
+                        {
+                            result.TrySetResult(buttons[1]);
+                        });
+                    }
+                }
+            }
+
+            if(!string.IsNullOrWhiteSpace(cancel))
+            {
+                alertBuilder.SetNegativeButton(cancel, (sender, args) =>
+                {
+                    result.TrySetResult(cancel);
+                });
+            }
+
+            var alert = alertBuilder.Create();
+            alert.CancelEvent += (o, args) => { result.TrySetResult(null); };
+            alert.Show();
+            return result.Task;
         }
     }
 }

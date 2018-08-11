@@ -887,7 +887,7 @@
   </data>
   <data name="YubiKeyTitle" xml:space="preserve">
     <value>YubiKey NEO biztonsági kulcs</value>
-    <comment>"YubiKey NEO" is the product name and should not be translated.</comment>
+    <comment>"YubiKey" is the product name and should not be translated.</comment>
   </data>
   <data name="AddNewAttachment" xml:space="preserve">
     <value>Melléklet hozzáadása</value>
@@ -1022,12 +1022,6 @@
   </data>
   <data name="CustomFields" xml:space="preserve">
     <value>Egyedi mezők</value>
-  </data>
-  <data name="CustomFieldsUpdated" xml:space="preserve">
-    <value>Egyedi mezők frissítve.</value>
-  </data>
-  <data name="NoCustomFields" xml:space="preserve">
-    <value>Nincsenek egyedi mezők. Az egyedi mezőkek teljes mértékben kezelheted a webes széfedben, vagy a böngésző bővítményen keresztül.</value>
   </data>
   <data name="CopyNumber" xml:space="preserve">
     <value>Szám másolása</value>
@@ -1223,12 +1217,100 @@
     <value>Arc-azonosító megerősítése</value>
   </data>
   <data name="UseWindowsHelloToUnlock" xml:space="preserve">
-    <value>Unlock with Windows Hello</value>
+    <value>Kinyitás Windows Hello-val</value>
   </data>
   <data name="VerifyWindowsHello" xml:space="preserve">
-    <value>Verify with Windows Hello</value>
+    <value>Ellenőrzés Windows Hello-val</value>
   </data>
   <data name="WindowsHello" xml:space="preserve">
     <value>Windows Hello</value>
+  </data>
+  <data name="BitwardenAutofillGoToSettings" xml:space="preserve">
+    <value>Nem sikerült automatikusan megnyitni az Android automatikus kitöltés beállításai menüt. A beállítás megnyitásához nyitsd meg a Beállítások &gt; Rendszer &gt; Nyelv és bevitel &gt; Speciális &gt; Automatikus kitöltés menüpontot.</value>
+  </data>
+  <data name="CustomFieldName" xml:space="preserve">
+    <value>Egyéni mező neve</value>
+  </data>
+  <data name="FieldTypeBoolean" xml:space="preserve">
+    <value>Logikai</value>
+  </data>
+  <data name="FieldTypeHidden" xml:space="preserve">
+    <value>Rejtett</value>
+  </data>
+  <data name="FieldTypeText" xml:space="preserve">
+    <value>Szöveg</value>
+  </data>
+  <data name="NewCustomField" xml:space="preserve">
+    <value>Új egyedi mező</value>
+  </data>
+  <data name="SelectTypeField" xml:space="preserve">
+    <value>Milyen típusú egyéni mező szeretné hozzáadni?</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Eltávolít</value>
+  </data>
+  <data name="NewUri" xml:space="preserve">
+    <value>Új URI</value>
+  </data>
+  <data name="URIPosition" xml:space="preserve">
+    <value>URI {0}</value>
+    <comment>Label for a uri/url with position. i.e. URI 1, URI 2, etc</comment>
+  </data>
+  <data name="BaseDomain" xml:space="preserve">
+    <value>Alap domain</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Alapértelmezett</value>
+  </data>
+  <data name="Exact" xml:space="preserve">
+    <value>Pontos</value>
+  </data>
+  <data name="Host" xml:space="preserve">
+    <value>Hoszt</value>
+    <comment>A URL's host value. For example, the host of https://sub.domain.com:443 is 'sub.domain.com:443'.</comment>
+  </data>
+  <data name="RegEx" xml:space="preserve">
+    <value>Reguláris kifejezés</value>
+    <comment>A programming term, also known as 'RegEx'.</comment>
+  </data>
+  <data name="StartsWith" xml:space="preserve">
+    <value>Ezzel kezdődik</value>
+  </data>
+  <data name="URIMatchDetection" xml:space="preserve">
+    <value>URI találatfelismerés</value>
+  </data>
+  <data name="MatchDetection" xml:space="preserve">
+    <value>Találatfelismerés</value>
+    <comment>URI match detection for auto-fill.</comment>
+  </data>
+  <data name="YesAndSave" xml:space="preserve">
+    <value>Igen, és mentés</value>
+  </data>
+  <data name="AutofillAndSave" xml:space="preserve">
+    <value>Automatikus kitöltés és mentés</value>
+  </data>
+  <data name="Organization" xml:space="preserve">
+    <value>Szervezet</value>
+    <comment>An entity of multiple related people (ex. a team or business organization).</comment>
+  </data>
+  <data name="HoldYubikeyNearTop" xml:space="preserve">
+    <value>Tartsd lenyomva a Yubikey-t, a készülék tetején.</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>Próbáld újra</value>
+  </data>
+  <data name="YubiKeyInstructionIos" xml:space="preserve">
+    <value>A folytatáshoz tartsd lenyomva a YubiKey NEO-t a készülék hátoldalán.</value>
+  </data>
+  <data name="BitwardenAutofillAccessibilityServiceDescription2" xml:space="preserve">
+    <value>A kisegítő szolgáltatás használata hasznos lehet, ha az alkalmazások nem támogatják a szabványos automatikus kitöltési szolgáltatást.</value>
+  </data>
+  <data name="DatePasswordUpdated" xml:space="preserve">
+    <value>Password Updated</value>
+    <comment>ex. Date this password was updated</comment>
+  </data>
+  <data name="DateUpdated" xml:space="preserve">
+    <value>Updated</value>
+    <comment>ex. Date this item was updated</comment>
   </data>
 </root>

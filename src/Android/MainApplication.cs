@@ -13,9 +13,9 @@ using Plugin.Fingerprint;
 using Plugin.Settings;
 using XLabs.Ioc;
 using System.Threading.Tasks;
-using FFImageLoading.Forms.Droid;
 using XLabs.Ioc.SimpleInjectorContainer;
 using SimpleInjector;
+using Android.Gms.Security;
 
 namespace Bit.Android
 {
@@ -24,12 +24,10 @@ namespace Bit.Android
 #else
     [Application(Debuggable = false)]
 #endif
-    public class MainApplication : Application, Application.IActivityLifecycleCallbacks
+    public class MainApplication : Application, ProviderInstaller.IProviderInstallListener
     {
         private const string FirstLaunchKey = "firstLaunch";
         private const string LastVersionCodeKey = "lastVersionCode";
-
-        public static Context AppContext;
 
         public MainApplication(IntPtr handle, JniHandleOwnership transer)
           : base(handle, transer)
@@ -39,6 +37,11 @@ namespace Bit.Android
             if(!Resolver.IsSet)
             {
                 SetIoc(this);
+            }
+
+            if(Build.VERSION.SdkInt <= BuildVersionCodes.Kitkat)
+            {
+                ProviderInstaller.InstallIfNeededAsync(ApplicationContext, this);
             }
         }
 
@@ -56,52 +59,13 @@ namespace Bit.Android
             // workaround for app compat bug
             // ref https://forums.xamarin.com/discussion/62414/app-resuming-results-in-crash-with-formsappcompatactivity
             Task.Delay(10).Wait();
-
-            RegisterActivityLifecycleCallbacks(this);
-            AppContext = ApplicationContext;
-        }
-
-        public override void OnTerminate()
-        {
-            base.OnTerminate();
-            UnregisterActivityLifecycleCallbacks(this);
-        }
-
-        public void OnActivityCreated(Activity activity, Bundle savedInstanceState)
-        {
-            CrossCurrentActivity.Current.Activity = activity;
-        }
-
-        public void OnActivityDestroyed(Activity activity)
-        {
-        }
-
-        public void OnActivityPaused(Activity activity)
-        {
-        }
-
-        public void OnActivityResumed(Activity activity)
-        {
-            CrossCurrentActivity.Current.Activity = activity;
-        }
-
-        public void OnActivitySaveInstanceState(Activity activity, Bundle outState)
-        {
-        }
-
-        public void OnActivityStarted(Activity activity)
-        {
-            CrossCurrentActivity.Current.Activity = activity;
-        }
-
-        public void OnActivityStopped(Activity activity)
-        {
+            CrossCurrentActivity.Current.Init(this);
         }
 
         public static void SetIoc(Application application)
         {
             Refractored.FabControl.Droid.FloatingActionButtonViewRenderer.Init();
-            CachedImageRenderer.Init(true);
+            FFImageLoading.Forms.Platform.CachedImageRenderer.Init(true);
             ZXing.Net.Mobile.Forms.Android.Platform.Init();
             CrossFingerprint.SetCurrentActivityResolver(() => CrossCurrentActivity.Current.Activity);
 
@@ -109,8 +73,8 @@ namespace Bit.Android
             var container = new Container();
 
             // Android Stuff
-            container.RegisterSingleton(application.ApplicationContext);
-            container.RegisterSingleton<Application>(application);
+            container.RegisterInstance(application.ApplicationContext);
+            container.RegisterInstance<Application>(application);
 
             // Services
             container.RegisterSingleton<IDatabaseService, DatabaseService>();
@@ -128,7 +92,11 @@ namespace Bit.Android
             container.RegisterSingleton<IPasswordGenerationService, PasswordGenerationService>();
             container.RegisterSingleton<ILockService, LockService>();
             container.RegisterSingleton<IAppInfoService, AppInfoService>();
+#if FDROID
+            container.RegisterSingleton<IGoogleAnalyticsService, NoopGoogleAnalyticsService>();
+#else
             container.RegisterSingleton<IGoogleAnalyticsService, GoogleAnalyticsService>();
+#endif
             container.RegisterSingleton<IDeviceInfoService, DeviceInfoService>();
             container.RegisterSingleton<ILocalizeService, LocalizeService>();
             container.RegisterSingleton<ILogService, LogService>();
@@ -154,16 +122,29 @@ namespace Bit.Android
             container.RegisterSingleton<ICipherCollectionRepository, CipherCollectionRepository>();
 
             // Other
-            container.RegisterSingleton(CrossSettings.Current);
-            container.RegisterSingleton(CrossConnectivity.Current);
-            container.RegisterSingleton(CrossFingerprint.Current);
+            container.RegisterInstance(CrossSettings.Current);
+            container.RegisterInstance(CrossConnectivity.Current);
+            container.RegisterInstance(CrossFingerprint.Current);
 
             // Push
+#if FDROID
+            container.RegisterSingleton<IPushNotificationListener, NoopPushNotificationListener>();
+            container.RegisterSingleton<IPushNotificationService, NoopPushNotificationService>();
+#else
             container.RegisterSingleton<IPushNotificationListener, PushNotificationListener>();
             container.RegisterSingleton<IPushNotificationService, AndroidPushNotificationService>();
+#endif
 
             container.Verify();
             Resolver.SetResolver(new SimpleInjectorResolver(container));
+        }
+
+        public void OnProviderInstallFailed(int errorCode, Intent recoveryIntent)
+        {
+        }
+
+        public void OnProviderInstalled()
+        {
         }
     }
 }

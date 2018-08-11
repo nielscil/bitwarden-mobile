@@ -14,7 +14,13 @@ namespace Bit.Android.Autofill
             "com.opera.browser.beta","com.opera.mini.native","com.chrome.dev","com.chrome.canary",
             "com.google.android.apps.chrome","com.google.android.apps.chrome_dev","com.yandex.browser",
             "com.sec.android.app.sbrowser","com.sec.android.app.sbrowser.beta","org.codeaurora.swe.browser",
-            "com.amazon.cloud9"
+            "com.amazon.cloud9","org.mozilla.klar","com.duckduckgo.mobile.android","mark.via.gp","org.bromite.bromite",
+            "org.chromium.chrome", "com.kiwibrowser.browser", "com.ecosia.android"
+        };
+
+        public static HashSet<string> ExcludedPackageIds = new HashSet<string>
+        {
+            "android"
         };
 
         private readonly AssistStructure _structure;
@@ -87,38 +93,43 @@ namespace Bit.Android.Autofill
                 var node = _structure.GetWindowNodeAt(i);
                 ParseNode(node.RootViewNode);
             }
+
+            if(!TrustedBrowsers.Contains(PackageName))
+            {
+                WebDomain = null;
+            }
         }
 
         private void ParseNode(ViewNode node)
         {
+            SetPackageAndDomain(node);
             var hints = node.GetAutofillHints();
             var isEditText = node.ClassName == "android.widget.EditText" || node?.HtmlInfo?.Tag == "input";
             if(isEditText || (hints?.Length ?? 0) > 0)
             {
-                if(PackageName == null)
-                {
-                    PackageName = node.IdPackage;
-                }
-                if(WebDomain == null && TrustedBrowsers.Contains(node.IdPackage))
-                {
-                    WebDomain = node.WebDomain;
-                }
-
                 FieldCollection.Add(new Field(node));
             }
             else
             {
-                if(WebDomain == null && TrustedBrowsers.Contains(node.IdPackage))
-                {
-                    WebDomain = node.WebDomain;
-                }
-
                 FieldCollection.IgnoreAutofillIds.Add(node.AutofillId);
             }
 
             for(var i = 0; i < node.ChildCount; i++)
             {
                 ParseNode(node.GetChildAt(i));
+            }
+        }
+
+        private void SetPackageAndDomain(ViewNode node)
+        {
+            if(string.IsNullOrWhiteSpace(PackageName) && !string.IsNullOrWhiteSpace(node.IdPackage) &&
+                !ExcludedPackageIds.Contains(node.IdPackage))
+            {
+                PackageName = node.IdPackage;
+            }
+            if(string.IsNullOrWhiteSpace(WebDomain) && !string.IsNullOrWhiteSpace(node.WebDomain))
+            {
+                WebDomain = node.WebDomain;
             }
         }
     }

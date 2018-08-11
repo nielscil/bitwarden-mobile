@@ -82,6 +82,11 @@ namespace Bit.App.Utilities
                 throw new ArgumentNullException(nameof(iv));
             }
 
+            if(key.MacKey != null && mac == null)
+            {
+                throw new ArgumentNullException(nameof(mac));
+            }
+
             if(key.EncryptionType != type)
             {
                 throw new InvalidOperationException(nameof(type));
@@ -90,7 +95,7 @@ namespace Bit.App.Utilities
             if(key.MacKey != null && mac != null)
             {
                 var computedMacBytes = ComputeMac(ct, iv, key.MacKey);
-                if(!MacsEqual(key.MacKey, computedMacBytes, mac))
+                if(!MacsEqual(computedMacBytes, mac))
                 {
                     throw new InvalidOperationException("MAC failed.");
                 }
@@ -143,10 +148,11 @@ namespace Bit.App.Utilities
 
         // Safely compare two MACs in a way that protects against timing attacks (Double HMAC Verification).
         // ref: https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2011/february/double-hmac-verification/
-        public static bool MacsEqual(byte[] macKey, byte[] mac1, byte[] mac2)
+        // ref: https://paragonie.com/blog/2015/11/preventing-timing-attacks-on-string-comparison-with-double-hmac-strategy
+        public static bool MacsEqual(byte[] mac1, byte[] mac2)
         {
             var algorithm = WinRTCrypto.MacAlgorithmProvider.OpenAlgorithm(MacAlgorithm.HmacSha256);
-            var hasher = algorithm.CreateHash(macKey);
+            var hasher = algorithm.CreateHash(RandomBytes(32));
 
             hasher.Append(mac1);
             mac1 = hasher.GetValueAndReset();
@@ -171,16 +177,17 @@ namespace Bit.App.Utilities
         }
 
         // ref: https://github.com/mirthas/totp-net/blob/master/TOTP/Totp.cs
-        public static string Totp(string b32Key)
+        public static string Totp(string key)
         {
-            var key = Base32.FromBase32(b32Key);
-            if(key == null || key.Length == 0)
+            var otpParams = new OtpAuth(key);
+            var b32Key = Base32.FromBase32(otpParams.Secret);
+            if(b32Key == null || b32Key.Length == 0)
             {
                 return null;
             }
 
             var now = Helpers.EpocUtcNow() / 1000;
-            var sec = now / 30;
+            var sec = now / otpParams.Period;
 
             var secBytes = BitConverter.GetBytes(sec);
             if(BitConverter.IsLittleEndian)
@@ -188,17 +195,36 @@ namespace Bit.App.Utilities
                 Array.Reverse(secBytes, 0, secBytes.Length);
             }
 
-            var algorithm = WinRTCrypto.MacAlgorithmProvider.OpenAlgorithm(MacAlgorithm.HmacSha1);
-            var hasher = algorithm.CreateHash(key);
+            var algorithm = WinRTCrypto.MacAlgorithmProvider.OpenAlgorithm(otpParams.Algorithm);
+            var hasher = algorithm.CreateHash(b32Key);
             hasher.Append(secBytes);
             var hash = hasher.GetValueAndReset();
 
             var offset = (hash[hash.Length - 1] & 0xf);
-            var i = ((hash[offset] & 0x7f) << 24) | ((hash[offset + 1] & 0xff) << 16) |
+            var binary = ((hash[offset] & 0x7f) << 24) | ((hash[offset + 1] & 0xff) << 16) |
                 ((hash[offset + 2] & 0xff) << 8) | (hash[offset + 3] & 0xff);
-            var code = i % (int)Math.Pow(10, 6);
+            var otp = binary % (int)Math.Pow(10, otpParams.Digits);
 
-            return code.ToString().PadLeft(6, '0');
+            return otp.ToString().PadLeft(otpParams.Digits, '0');
+        }
+
+        // ref: https://tools.ietf.org/html/rfc5869
+        public static byte[] HkdfExpand(byte[] prk, byte[] info, int size)
+        {
+            var hashLen = 32; // sha256
+            var okm = new byte[size];
+            var previousT = new byte[0];
+            var n = (int)Math.Ceiling((double)size / hashLen);
+            for(int i = 0; i < n; i++)
+            {
+                var t = new byte[previousT.Length + info.Length + 1];
+                previousT.CopyTo(t, 0);
+                info.CopyTo(t, previousT.Length);
+                t[t.Length - 1] = (byte)(i + 1);
+                previousT = ComputeMac(t, prk);
+                previousT.CopyTo(okm, i * hashLen);
+            }
+            return okm;
         }
     }
 }

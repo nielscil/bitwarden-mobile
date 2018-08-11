@@ -23,7 +23,7 @@ namespace Bit.App.Models.Page
 
                 if(string.IsNullOrWhiteSpace(Name) || Name.Length == 0)
                 {
-                    NameGroup = AppResources.Other;
+                    NameGroup = "-";
                 }
                 else if(Char.IsLetter(Name[0]))
                 {
@@ -35,14 +35,14 @@ namespace Bit.App.Models.Page
                 }
                 else
                 {
-                    NameGroup = AppResources.Other;
+                    NameGroup = "-";
                 }
 
                 switch(cipher.Type)
                 {
                     case CipherType.Login:
                         LoginUsername = cipher.Login?.Username?.Decrypt(cipher.OrganizationId) ?? " ";
-                        LoginUri = cipher.Login?.Uri?.Decrypt(cipher.OrganizationId) ?? " ";
+                        LoginUri = cipher.Login.Uris?.FirstOrDefault()?.Uri?.Decrypt(cipher.OrganizationId) ?? " ";
                         LoginPassword = new Lazy<string>(() => cipher.Login?.Password?.Decrypt(cipher.OrganizationId));
                         LoginTotp = new Lazy<string>(() => cipher.Login?.Totp?.Decrypt(cipher.OrganizationId));
 
@@ -79,7 +79,7 @@ namespace Bit.App.Models.Page
                                 }
                                 else
                                 {
-                                    iconsUrl = "https://icons.bitwarden.com";
+                                    iconsUrl = "https://icons.bitwarden.net";
                                 }
                             }
 
@@ -172,7 +172,11 @@ namespace Bit.App.Models.Page
             {
                 AddRange(groupItems);
 
-                if(doUpper)
+                if(string.IsNullOrWhiteSpace(name))
+                {
+                    Name = "-";
+                }
+                else if(doUpper)
                 {
                     Name = name.ToUpperInvariant();
                 }

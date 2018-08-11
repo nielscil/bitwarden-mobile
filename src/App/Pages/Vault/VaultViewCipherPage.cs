@@ -21,7 +21,8 @@ namespace Bit.App.Pages
         private readonly ICipherService _cipherService;
         private readonly IDeviceActionService _deviceActionService;
         private readonly ITokenService _tokenService;
-        private bool _pageDisappeared = true;
+        private DateTime? _timerStarted = null;
+        private TimeSpan _timerMaxLength = TimeSpan.FromMinutes(5);
 
         public VaultViewCipherPage(CipherType type, string cipherId)
         {
@@ -38,9 +39,11 @@ namespace Bit.App.Pages
         private VaultViewCipherPageModel Model { get; set; } = new VaultViewCipherPageModel();
         private ExtendedTableView Table { get; set; }
         private TableSection ItemInformationSection { get; set; }
+        public TableSection UrisSection { get; set; }
         private TableSection NotesSection { get; set; }
         private TableSection AttachmentsSection { get; set; }
         private TableSection FieldsSection { get; set; }
+        public TableSection OtherSection { get; set; }
         public LabeledValueCell NotesCell { get; set; }
         private EditCipherToolBarItem EditItem { get; set; }
         public List<LabeledValueCell> FieldsCells { get; set; }
@@ -49,7 +52,7 @@ namespace Bit.App.Pages
         // Login
         public LabeledValueCell LoginUsernameCell { get; set; }
         public LabeledValueCell LoginPasswordCell { get; set; }
-        public LabeledValueCell LoginUriCell { get; set; }
+        public LabeledValueCell LoginPasswordRevisionDateCell { get; set; }
         public LabeledValueCell LoginTotpCodeCell { get; set; }
 
         // Card
@@ -110,6 +113,10 @@ namespace Bit.App.Pages
             NotesCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.Notes));
             NotesCell.Value.LineBreakMode = LineBreakMode.WordWrap;
 
+            var revisionDateCell = new LabeledValueCell(AppResources.DateUpdated);
+            revisionDateCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.RevisionDate));
+            revisionDateCell.Value.LineBreakMode = LineBreakMode.WordWrap;
+
             switch(_type)
             {
                 case CipherType.Login:
@@ -128,10 +135,6 @@ namespace Bit.App.Pages
                         nameof(VaultViewCipherPageModel.MaskedLoginPassword));
                     LoginPasswordCell.Button1.SetBinding(Button.ImageProperty,
                         nameof(VaultViewCipherPageModel.LoginShowHideImage));
-                    if(Device.RuntimePlatform == Device.iOS)
-                    {
-                        LoginPasswordCell.Button1.Margin = new Thickness(10, 0);
-                    }
                     LoginPasswordCell.Button1.Command =
                         new Command(() => Model.RevealLoginPassword = !Model.RevealLoginPassword);
                     LoginPasswordCell.Button2.Command =
@@ -139,22 +142,6 @@ namespace Bit.App.Pages
                     LoginPasswordCell.Value.FontFamily =
                         Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
                     LoginPasswordCell.Value.LineBreakMode = LineBreakMode.WordWrap;
-
-                    // URI
-                    LoginUriCell = new LabeledValueCell(AppResources.Website, button1Image: "launch.png");
-                    LoginUriCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.LoginUriHost));
-                    LoginUriCell.Button1.SetBinding(IsVisibleProperty, nameof(VaultViewCipherPageModel.ShowLoginLaunch));
-                    LoginUriCell.Button1.Command = new Command(async () =>
-                    {
-                        if(Device.RuntimePlatform == Device.Android && Model.LoginUri.StartsWith("androidapp://"))
-                        {
-                            await _deviceActionService.LaunchAppAsync(Model.LoginUri, this);
-                        }
-                        else if(Model.LoginUri.StartsWith("http://") || Model.LoginUri.StartsWith("https://"))
-                        {
-                            Device.OpenUri(new Uri(Model.LoginUri));
-                        }
-                    });
 
                     // Totp
                     LoginTotpCodeCell = new LabeledValueCell(
@@ -171,6 +158,12 @@ namespace Bit.App.Pages
                         nameof(VaultViewCipherPageModel.LoginTotpColor));
                     LoginTotpCodeCell.Value.FontFamily =
                         Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
+
+                    // Password Revision Date
+                    LoginPasswordRevisionDateCell = new LabeledValueCell(AppResources.DatePasswordUpdated);
+                    LoginPasswordRevisionDateCell.Value.SetBinding(Label.TextProperty,
+                        nameof(VaultViewCipherPageModel.PasswordRevisionDate));
+                    LoginPasswordRevisionDateCell.Value.LineBreakMode = LineBreakMode.WordWrap;
                     break;
                 case CipherType.Card:
                     CardNameCell = new LabeledValueCell(AppResources.CardholderName);
@@ -187,9 +180,15 @@ namespace Bit.App.Pages
                     CardExpCell = new LabeledValueCell(AppResources.Expiration);
                     CardExpCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.CardExp));
 
-                    CardCodeCell = new LabeledValueCell(AppResources.SecurityCode, button1Image: "clipboard.png");
-                    CardCodeCell.Button1.Command = new Command(() => Copy(Model.CardCode, AppResources.SecurityCode));
-                    CardCodeCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.CardCode));
+                    CardCodeCell = new LabeledValueCell(AppResources.SecurityCode, button1Image: string.Empty,
+                        button2Image: "clipboard.png");
+                    CardCodeCell.Value.SetBinding(Label.TextProperty, nameof(VaultViewCipherPageModel.MaskedCardCode));
+                    CardCodeCell.Button1.SetBinding(Button.ImageProperty,
+                        nameof(VaultViewCipherPageModel.CardCodeShowHideImage));
+                    CardCodeCell.Button1.Command = new Command(() => Model.RevealCardCode = !Model.RevealCardCode);
+                    CardCodeCell.Button2.Command = new Command(() => Copy(Model.CardCode, AppResources.SecurityCode));
+                    CardCodeCell.Value.FontFamily =
+                        Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
                     break;
                 case CipherType.Identity:
                     IdNameCell = new LabeledValueCell(AppResources.Name);
@@ -248,6 +247,11 @@ namespace Bit.App.Pages
                 NotesCell
             };
 
+            OtherSection = new TableSection(Helpers.GetEmptyTableSectionTitle())
+            {
+                revisionDateCell
+            };
+
             Table = new ExtendedTableView
             {
                 Intent = TableIntent.Settings,
@@ -273,7 +277,6 @@ namespace Bit.App.Pages
 
         protected async override void OnAppearing()
         {
-            _pageDisappeared = false;
             NotesCell.Tapped += NotesCell_Tapped;
             EditItem?.InitEvents();
 
@@ -291,7 +294,7 @@ namespace Bit.App.Pages
 
         protected override void OnDisappearing()
         {
-            _pageDisappeared = true;
+            _timerStarted = null;
             NotesCell.Tapped -= NotesCell_Tapped;
             EditItem?.Dispose();
             CleanupAttachmentCells();
@@ -299,6 +302,22 @@ namespace Bit.App.Pages
 
         private void BuildTable(Cipher cipher)
         {
+            // URIs
+            if(UrisSection != null && Table.Root.Contains(UrisSection))
+            {
+                Table.Root.Remove(UrisSection);
+            }
+            if(Model.ShowLoginUris)
+            {
+                UrisSection = new TableSection(Helpers.GetEmptyTableSectionTitle());
+                foreach(var uri in Model.LoginUris)
+                {
+                    UrisSection.Add(new UriViewCell(this, uri));
+                }
+                Table.Root.Add(UrisSection);
+            }
+
+            // Notes
             if(Table.Root.Contains(NotesSection))
             {
                 Table.Root.Remove(NotesSection);
@@ -306,29 +325,6 @@ namespace Bit.App.Pages
             if(Model.ShowNotes)
             {
                 Table.Root.Add(NotesSection);
-            }
-
-            // Attachments
-            CleanupAttachmentCells();
-            if(Table.Root.Contains(AttachmentsSection))
-            {
-                Table.Root.Remove(AttachmentsSection);
-            }
-            if(Model.ShowAttachments && _tokenService.TokenPremium)
-            {
-                AttachmentsSection = new TableSection(AppResources.Attachments);
-                AttachmentCells = new List<AttachmentViewCell>();
-                foreach(var attachment in Model.Attachments.OrderBy(s => s.Name))
-                {
-                    var attachmentCell = new AttachmentViewCell(attachment, async () =>
-                    {
-                        await OpenAttachmentAsync(cipher, attachment);
-                    });
-                    AttachmentCells.Add(attachmentCell);
-                    AttachmentsSection.Add(attachmentCell);
-                    attachmentCell.InitEvents();
-                }
-                Table.Root.Add(AttachmentsSection);
             }
 
             // Fields
@@ -361,11 +357,49 @@ namespace Bit.App.Pages
                 Table.Root.Add(FieldsSection);
             }
 
+            // Attachments
+            CleanupAttachmentCells();
+            if(Table.Root.Contains(AttachmentsSection))
+            {
+                Table.Root.Remove(AttachmentsSection);
+            }
+            if(Model.ShowAttachments && (_tokenService.TokenPremium || cipher.OrganizationId != null))
+            {
+                AttachmentsSection = new TableSection(AppResources.Attachments);
+                AttachmentCells = new List<AttachmentViewCell>();
+                foreach(var attachment in Model.Attachments.OrderBy(s => s.Name))
+                {
+                    var attachmentCell = new AttachmentViewCell(attachment, async () =>
+                    {
+                        await OpenAttachmentAsync(cipher, attachment);
+                    });
+                    AttachmentCells.Add(attachmentCell);
+                    AttachmentsSection.Add(attachmentCell);
+                    attachmentCell.InitEvents();
+                }
+                Table.Root.Add(AttachmentsSection);
+            }
+
+            // Other
+            if(Table.Root.Contains(OtherSection))
+            {
+                Table.Root.Remove(OtherSection);
+            }
+            Table.Root.Add(OtherSection);
+
             // Various types
             switch(cipher.Type)
             {
                 case CipherType.Login:
-                    AddSectionCell(LoginUriCell, Model.ShowLoginUri);
+                    if(OtherSection.Contains(LoginPasswordRevisionDateCell))
+                    {
+                        OtherSection.Remove(LoginPasswordRevisionDateCell);
+                    }
+                    if(Model.ShowPasswordRevisionDate)
+                    {
+                        OtherSection.Add(LoginPasswordRevisionDateCell);
+                    }
+
                     AddSectionCell(LoginUsernameCell, Model.ShowLoginUsername);
                     AddSectionCell(LoginPasswordCell, Model.ShowLoginPassword);
 
@@ -378,18 +412,20 @@ namespace Bit.App.Pages
                         var totpKey = cipher.Login?.Totp.Decrypt(cipher.OrganizationId);
                         if(!string.IsNullOrWhiteSpace(totpKey))
                         {
+                            var otpParams = new OtpAuth(totpKey);
                             Model.LoginTotpCode = Crypto.Totp(totpKey);
                             if(!string.IsNullOrWhiteSpace(Model.LoginTotpCode))
                             {
-                                TotpTick(totpKey);
+                                TotpTick(totpKey, otpParams.Period);
+                                _timerStarted = DateTime.Now;
                                 Device.StartTimer(new TimeSpan(0, 0, 1), () =>
                                 {
-                                    if(_pageDisappeared)
+                                    if(_timerStarted == null || (DateTime.Now - _timerStarted) > _timerMaxLength)
                                     {
                                         return false;
                                     }
 
-                                    TotpTick(totpKey);
+                                    TotpTick(totpKey, otpParams.Period);
                                     return true;
                                 });
 
@@ -466,9 +502,9 @@ namespace Bit.App.Pages
                 return;
             }
 
-            _deviceActionService.ShowLoading(AppResources.Downloading);
+            await _deviceActionService.ShowLoadingAsync(AppResources.Downloading);
             var data = await _cipherService.DownloadAndDecryptAttachmentAsync(attachment.Url, cipher.OrganizationId);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(data == null)
             {
@@ -494,11 +530,11 @@ namespace Bit.App.Pages
             _deviceActionService.Toast(string.Format(AppResources.ValueHasBeenCopied, alertLabel));
         }
 
-        private void TotpTick(string totpKey)
+        private void TotpTick(string totpKey, int interval)
         {
             var now = Helpers.EpocUtcNow() / 1000;
-            var mod = now % 30;
-            Model.LoginTotpSecond = (int)(30 - mod);
+            var mod = now % interval;
+            Model.LoginTotpSecond = (int)(interval - mod);
 
             if(mod == 0)
             {
@@ -574,13 +610,7 @@ namespace Bit.App.Pages
             public FieldViewCell(VaultViewCipherPage page, VaultViewCipherPageModel.Field field, bool? a, bool? b)
                 : base(field.Name, field.MaskedValue, string.Empty, "clipboard.png")
             {
-                Value.FontFamily = Helpers.OnPlatform(iOS: "Menlo-Regular",
-                    Android: "monospace", Windows: "Courier");
-                if(Device.RuntimePlatform == Device.iOS)
-                {
-                    Button1.Margin = new Thickness(10, 0);
-                }
-
+                Value.FontFamily = Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
                 Button1.Image = "eye";
                 Button1.Command = new Command(() =>
                 {
@@ -607,6 +637,30 @@ namespace Bit.App.Pages
                 {
                     copyButton.Command = new Command(() => page.Copy(field.Value, field.Name));
                 }
+            }
+        }
+
+        public class UriViewCell : LabeledValueCell
+        {
+            public UriViewCell(VaultViewCipherPage page, VaultViewCipherPageModel.LoginUri uri)
+                : base(uri.Label, uri.Host, uri.ShowLaunch ? "launch.png" : null, "clipboard.png")
+            {
+                Value.LineBreakMode = LineBreakMode.TailTruncation;
+                if(Button1 != null)
+                {
+                    Button1.Command = new Command(async () =>
+                    {
+                        if(Device.RuntimePlatform == Device.Android && uri.IsApp)
+                        {
+                            await page._deviceActionService.LaunchAppAsync(uri.Value, page);
+                        }
+                        else if(uri.IsWebsite)
+                        {
+                            Device.OpenUri(new Uri(uri.Value));
+                        }
+                    });
+                }
+                Button2.Command = new Command(() => page.Copy(uri.Value, AppResources.URI));
             }
         }
     }

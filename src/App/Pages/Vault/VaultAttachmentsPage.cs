@@ -49,6 +49,7 @@ namespace Bit.App.Pages
         public Label FileLabel { get; set; }
         public ExtendedTableView NewTable { get; set; }
         public Label NoDataLabel { get; set; }
+        public ToolbarItem SaveToolbarItem { get; set; }
 
         private void Init()
         {
@@ -110,11 +111,6 @@ namespace Bit.App.Pages
                 VerticalOptions = LayoutOptions.FillAndExpand
             };
 
-            if(_tokenService.TokenPremium)
-            {
-                ListView.Footer = NewTable;
-            }
-
             NoDataLabel = new Label
             {
                 Text = AppResources.NoAttachments,
@@ -130,7 +126,7 @@ namespace Bit.App.Pages
                 Margin = new Thickness(0, 40, 0, 0)
             };
 
-            var saveToolBarItem = new ToolbarItem(AppResources.Save, Helpers.ToolbarImage("envelope.png"), async () =>
+            SaveToolbarItem = new ToolbarItem(AppResources.Save, Helpers.ToolbarImage("envelope.png"), async () =>
             {
                 if(_lastAction.LastActionWasRecent() || _cipher == null)
                 {
@@ -158,9 +154,9 @@ namespace Bit.App.Pages
                     return;
                 }
 
-                _deviceActionService.ShowLoading(AppResources.Saving);
+                await _deviceActionService.ShowLoadingAsync(AppResources.Saving);
                 var saveTask = await _cipherService.EncryptAndSaveAttachmentAsync(_cipher, _fileBytes, FileLabel.Text);
-                _deviceActionService.HideLoading();
+                await _deviceActionService.HideLoadingAsync();
 
                 if(saveTask.Succeeded)
                 {
@@ -183,11 +179,6 @@ namespace Bit.App.Pages
             Title = AppResources.Attachments;
             Content = ListView;
 
-            if(_tokenService.TokenPremium)
-            {
-                ToolbarItems.Add(saveToolBarItem);
-            }
-
             if(Device.RuntimePlatform == Device.iOS)
             {
                 ListView.RowHeight = -1;
@@ -209,9 +200,29 @@ namespace Bit.App.Pages
             ListView.ItemSelected += AttachmentSelected;
             await LoadAttachmentsAsync();
 
-            if(_tokenService.TokenPremium && !_canUseAttachments)
+            // Prevent from adding multiple save buttons
+            if(Device.RuntimePlatform == Device.iOS && ToolbarItems.Count > 1)
             {
-                await ShowUpdateKeyAsync();
+                ToolbarItems.RemoveAt(1);
+            }
+            else if(Device.RuntimePlatform != Device.iOS && ToolbarItems.Count > 0)
+            {
+                ToolbarItems.RemoveAt(0);
+            }
+
+            if(_cipher != null && (_tokenService.TokenPremium || _cipher.OrganizationId != null))
+            {
+                ToolbarItems.Add(SaveToolbarItem);
+                ListView.Footer = NewTable;
+
+                if(!_canUseAttachments)
+                {
+                    await ShowUpdateKeyAsync();
+                }
+            }
+            else
+            {
+                await DisplayAlert(null, AppResources.PremiumRequired, AppResources.Ok);
             }
         }
 
@@ -231,7 +242,7 @@ namespace Bit.App.Pages
             }
 
             var attachmentsToAdd = _cipher.Attachments
-                .Select(a => new VaultAttachmentsPageModel.Attachment(a))
+                .Select(a => new VaultAttachmentsPageModel.Attachment(a, _cipher.OrganizationId))
                 .OrderBy(s => s.Name);
             PresentationAttchments.ResetWithRange(attachmentsToAdd);
             AdjustContent();
@@ -269,9 +280,9 @@ namespace Bit.App.Pages
                 return;
             }
 
-            _deviceActionService.ShowLoading(AppResources.Deleting);
+            await _deviceActionService.ShowLoadingAsync(AppResources.Deleting);
             var saveTask = await _cipherService.DeleteAttachmentAsync(_cipher, attachment.Id);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(saveTask.Succeeded)
             {
@@ -314,7 +325,7 @@ namespace Bit.App.Pages
 
         private async Task ShowUpdateKeyAsync()
         {
-            var confirmed = await DisplayAlert(AppResources.FeatureUnavailable, AppResources.UpdateKey, 
+            var confirmed = await DisplayAlert(AppResources.FeatureUnavailable, AppResources.UpdateKey,
                 AppResources.LearnMore, AppResources.Cancel);
             if(confirmed)
             {

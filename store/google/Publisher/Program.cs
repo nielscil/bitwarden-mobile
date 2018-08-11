@@ -15,7 +15,7 @@ namespace Bit.Publisher
 
         private static string _apkFilePath;
         private static string _credsFilePath;
-        private static EditsResource.TracksResource.UpdateRequest.TrackEnum _track;
+        private static string _track;
 
         static void Main(string[] args)
         {
@@ -30,21 +30,25 @@ namespace Bit.Publisher
                 _apkFilePath = args[1];
 
                 var track = args[2].Substring(0, 1).ToLower();
-                if(args[2] == "a")
+                if(track == "a")
                 {
-                    _track = EditsResource.TracksResource.UpdateRequest.TrackEnum.Alpha;
+                    _track = "alpha";
                 }
-                else if(args[2] == "b")
+                else if(track == "b")
                 {
-                    _track = EditsResource.TracksResource.UpdateRequest.TrackEnum.Beta;
+                    _track = "beta";
                 }
-                else if(args[2] == "p")
+                else if(track == "p")
                 {
-                    _track = EditsResource.TracksResource.UpdateRequest.TrackEnum.Production;
+                    _track = "production";
                 }
-                else if(args[2] == "r")
+                else if(track == "r")
                 {
-                    _track = EditsResource.TracksResource.UpdateRequest.TrackEnum.Rollout;
+                    _track = "rollout";
+                }
+                else if(track == "i")
+                {
+                    _track = "internal";
                 }
 
                 new Program().Run().Wait();

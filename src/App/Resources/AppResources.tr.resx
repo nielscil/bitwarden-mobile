@@ -403,7 +403,7 @@
     <value>Uygulama uzantısı</value>
   </data>
   <data name="AutofillAccessibilityDescription" xml:space="preserve">
-    <value>Use the bitwarden accessibility service to auto-fill your logins across apps and the web.</value>
+    <value>bitwarden erişilebilirlik hizmetini, uygulamalarınızdaki ve internetteki oturumlarınızı otomatik olarak doldurmak için kullanın.</value>
   </data>
   <data name="AutofillService" xml:space="preserve">
     <value>Otomatik doldurma servisi</value>
@@ -424,7 +424,7 @@
     <value>bitwarden Otomatik doldurma Servisi</value>
   </data>
   <data name="BitwardenAutofillAccessibilityServiceDescription" xml:space="preserve">
-    <value>Use the bitwarden accessibility service to auto-fill your logins.</value>
+    <value>Giriş bilgilerinizi otomatik olarak doldurmak için bitwarden erişim hizmetini kullanın.</value>
   </data>
   <data name="ChangeEmail" xml:space="preserve">
     <value>E-postayı Değiştir</value>
@@ -762,7 +762,7 @@
     <value>Tap this notification to auto-fill a login from your vault.</value>
   </data>
   <data name="BitwardenAutofillServiceOpenAccessibilitySettings" xml:space="preserve">
-    <value>Open Accessibility Settings</value>
+    <value>Erişebilirlik Ayarlarını Aç</value>
   </data>
   <data name="BitwardenAutofillServiceStep1" xml:space="preserve">
     <value>1. Android erişilebilirlik ayarları ekranında, Servisler başlığı altında "bitwarden"a dokunun.</value>
@@ -887,7 +887,7 @@
   </data>
   <data name="YubiKeyTitle" xml:space="preserve">
     <value>YubiKey NEO Güvenlik Anahtarı</value>
-    <comment>"YubiKey NEO" is the product name and should not be translated.</comment>
+    <comment>"YubiKey" is the product name and should not be translated.</comment>
   </data>
   <data name="AddNewAttachment" xml:space="preserve">
     <value>Yeni bir ek ekle</value>
@@ -1022,12 +1022,6 @@
   </data>
   <data name="CustomFields" xml:space="preserve">
     <value>Özel Alanlar</value>
-  </data>
-  <data name="CustomFieldsUpdated" xml:space="preserve">
-    <value>Özel alanlar güncelleştirildi.</value>
-  </data>
-  <data name="NoCustomFields" xml:space="preserve">
-    <value>Özel alan yok. Özel alanları yönetmek için tarayıcı eklentisini veya web kasasını kullanabilirsiniz.</value>
   </data>
   <data name="CopyNumber" xml:space="preserve">
     <value>Numarayı Kopyala</value>
@@ -1180,55 +1174,143 @@
     <value>Sunucu URL simgeleri</value>
   </data>
   <data name="AutofillWithBitwarden" xml:space="preserve">
-    <value>Auto-fill with bitwarden</value>
+    <value>bitwarden ile otomatik doldur</value>
   </data>
   <data name="VaultIsLocked" xml:space="preserve">
-    <value>Vault is locked</value>
+    <value>Kasa kilitli</value>
   </data>
   <data name="GoToMyVault" xml:space="preserve">
-    <value>Go to my vault</value>
+    <value>Kasama git</value>
   </data>
   <data name="Collections" xml:space="preserve">
-    <value>Collections</value>
+    <value>Koleksiyonlar</value>
   </data>
   <data name="NoItemsCollection" xml:space="preserve">
-    <value>There are no items in this collection.</value>
+    <value>Bu koleksiyonda öğe yok.</value>
   </data>
   <data name="NoItemsFolder" xml:space="preserve">
-    <value>There are no items in this folder.</value>
+    <value>Bu klasörde öğe yok.</value>
   </data>
   <data name="AutofillAccessibilityService" xml:space="preserve">
-    <value>Auto-fill Accessibility Service</value>
+    <value>Otomatik Doldur Erişilebilirlik Hizmeti</value>
   </data>
   <data name="AutofillServiceDescription" xml:space="preserve">
-    <value>The bitwarden auto-fill service uses the Android Autofill Framework to assist in filling logins, credit cards, and identity information into other apps on your device.</value>
+    <value>bitwarden otomatik doldurma hizmeti; oturum açma, kredi kartı bilgileri ve kimlik bilgilerini cihazınızdaki diğer uygulamalarda doldurmaya yardımcı olmak için Android Otomatik Doldurma Sistemini kullanır.</value>
   </data>
   <data name="BitwardenAutofillServiceDescription" xml:space="preserve">
     <value>Giriş bilgilerinizi otomatik olarak doldurmak için bitwarden erişim hizmetini kullanın.</value>
   </data>
   <data name="BitwardenAutofillServiceOpenAutofillSettings" xml:space="preserve">
-    <value>Open Autofill Settings</value>
+    <value>Otomatik Doldur Ayarlarını Aç</value>
   </data>
   <data name="FaceID" xml:space="preserve">
     <value>Face ID</value>
     <comment>What Apple calls their facial recognition reader.</comment>
   </data>
   <data name="FaceIDDirection" xml:space="preserve">
-    <value>Use Face ID to verify.</value>
+    <value>Doğrulamak için Face ID kullan.</value>
   </data>
   <data name="UseFaceIDToUnlock" xml:space="preserve">
-    <value>Use Face ID To Unlock</value>
+    <value>Kilidi açmak için Face ID kullan</value>
   </data>
   <data name="VerifyFaceID" xml:space="preserve">
-    <value>Verify Face ID</value>
+    <value>Face ID Doğrula</value>
   </data>
   <data name="UseWindowsHelloToUnlock" xml:space="preserve">
-    <value>Unlock with Windows Hello</value>
+    <value>Windows Hello ile Kilit Aç</value>
   </data>
   <data name="VerifyWindowsHello" xml:space="preserve">
-    <value>Verify with Windows Hello</value>
+    <value>Windows Hello ile Doğrula</value>
   </data>
   <data name="WindowsHello" xml:space="preserve">
     <value>Windows Hello</value>
+  </data>
+  <data name="BitwardenAutofillGoToSettings" xml:space="preserve">
+    <value>Android otomatik doldurmayı sizin yerinize yapamıyor. Android ayarları&gt; Sistem&gt; Dil ve giriş&gt; Gelişmiş&gt; Otomatik doldurma servisleri'nden otomatik doldurma ayarlarını el ile yönlendirebilirsiniz.</value>
+  </data>
+  <data name="CustomFieldName" xml:space="preserve">
+    <value>Özel Alan Adı</value>
+  </data>
+  <data name="FieldTypeBoolean" xml:space="preserve">
+    <value>Boolean</value>
+  </data>
+  <data name="FieldTypeHidden" xml:space="preserve">
+    <value>Gizli</value>
+  </data>
+  <data name="FieldTypeText" xml:space="preserve">
+    <value>Metin</value>
+  </data>
+  <data name="NewCustomField" xml:space="preserve">
+    <value>Yeni Özel Alan</value>
+  </data>
+  <data name="SelectTypeField" xml:space="preserve">
+    <value>Ne tür bir özel alan eklemek istiyor musunuz?</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Kaldır</value>
+  </data>
+  <data name="NewUri" xml:space="preserve">
+    <value>Yeni URL</value>
+  </data>
+  <data name="URIPosition" xml:space="preserve">
+    <value>URL {0}</value>
+    <comment>Label for a uri/url with position. i.e. URI 1, URI 2, etc</comment>
+  </data>
+  <data name="BaseDomain" xml:space="preserve">
+    <value>Ana alanadı</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Varsayılan</value>
+  </data>
+  <data name="Exact" xml:space="preserve">
+    <value>Tam</value>
+  </data>
+  <data name="Host" xml:space="preserve">
+    <value>Sunucu alanadı</value>
+    <comment>A URL's host value. For example, the host of https://sub.domain.com:443 is 'sub.domain.com:443'.</comment>
+  </data>
+  <data name="RegEx" xml:space="preserve">
+    <value>Kurallı ifade</value>
+    <comment>A programming term, also known as 'RegEx'.</comment>
+  </data>
+  <data name="StartsWith" xml:space="preserve">
+    <value>İle başlar</value>
+  </data>
+  <data name="URIMatchDetection" xml:space="preserve">
+    <value>Eşleşen URL Tespiti</value>
+  </data>
+  <data name="MatchDetection" xml:space="preserve">
+    <value>Eşleşme Tespiti</value>
+    <comment>URI match detection for auto-fill.</comment>
+  </data>
+  <data name="YesAndSave" xml:space="preserve">
+    <value>Yes, and Save</value>
+  </data>
+  <data name="AutofillAndSave" xml:space="preserve">
+    <value>Auto-fill and save</value>
+  </data>
+  <data name="Organization" xml:space="preserve">
+    <value>Organization</value>
+    <comment>An entity of multiple related people (ex. a team or business organization).</comment>
+  </data>
+  <data name="HoldYubikeyNearTop" xml:space="preserve">
+    <value>Hold your Yubikey near the top of the device.</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>Try Again</value>
+  </data>
+  <data name="YubiKeyInstructionIos" xml:space="preserve">
+    <value>To continue, hold your YubiKey NEO against the back of the device.</value>
+  </data>
+  <data name="BitwardenAutofillAccessibilityServiceDescription2" xml:space="preserve">
+    <value>The accessibility service may be helpful to use when apps do not support the standard auto-fill service.</value>
+  </data>
+  <data name="DatePasswordUpdated" xml:space="preserve">
+    <value>Password Updated</value>
+    <comment>ex. Date this password was updated</comment>
+  </data>
+  <data name="DateUpdated" xml:space="preserve">
+    <value>Updated</value>
+    <comment>ex. Date this item was updated</comment>
   </data>
 </root>

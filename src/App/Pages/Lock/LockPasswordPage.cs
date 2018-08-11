@@ -38,7 +38,7 @@ namespace Bit.App.Pages
             PasswordCell = new FormEntryCell(AppResources.MasterPassword, isPassword: true,
                 useLabelAsPlaceholder: true, imageSource: "lock.png", containerPadding: padding);
 
-            PasswordCell.Entry.ReturnType = Enums.ReturnType.Go;
+            PasswordCell.Entry.TargetReturnType = Enums.ReturnType.Go;
 
             var table = new ExtendedTableView
             {
@@ -83,7 +83,7 @@ namespace Bit.App.Pages
                 table.EstimatedRowHeight = 70;
             }
 
-            var loginToolbarItem = new ToolbarItem(AppResources.Submit, Helpers.ToolbarImage("login.png"), async () =>
+            var loginToolbarItem = new ToolbarItem(AppResources.Submit, Helpers.ToolbarImage("ion_chevron_right.png"), async () =>
             {
                 await CheckPasswordAsync();
             }, ToolbarItemOrder.Default, 0);
@@ -93,9 +93,9 @@ namespace Bit.App.Pages
             Content = scrollView;
         }
 
-        private void Entry_Completed(object sender, EventArgs e)
+        private async void Entry_Completed(object sender, EventArgs e)
         {
-            var task = CheckPasswordAsync();
+            await CheckPasswordAsync();
         }
 
         protected override void OnAppearing()
@@ -155,7 +155,10 @@ namespace Bit.App.Pages
             if(key.Key.SequenceEqual(_cryptoService.Key.Key))
             {
                 _appSettingsService.Locked = false;
-                await Navigation.PopModalAsync();
+                if(Navigation.ModalStack.Count > 0)
+                {
+                    await Navigation.PopModalAsync();
+                }
             }
             else
             {

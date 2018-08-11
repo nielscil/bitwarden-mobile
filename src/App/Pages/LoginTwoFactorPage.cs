@@ -31,10 +31,12 @@ namespace Bit.App.Pages
         private readonly Dictionary<TwoFactorProviderType, Dictionary<string, object>> _providers;
         private TwoFactorProviderType? _providerType;
         private readonly FullLoginResult _result;
+        private readonly string _duoOrgTitle;
 
         public LoginTwoFactorPage(string email, FullLoginResult result, TwoFactorProviderType? type = null)
-            : base(updateActivity: false)
+            : base(updateActivity: false, requireAuth: false)
         {
+            _duoOrgTitle = $"Duo ({AppResources.Organization})";
             _deviceInfoService = Resolver.Resolve<IDeviceInfoService>();
 
             _email = email;
@@ -93,6 +95,13 @@ namespace Bit.App.Pages
                 On = false
             };
 
+            var continueToolbarItem = new ToolbarItem(AppResources.Continue,
+                Helpers.ToolbarImage("ion_chevron_right.png"), async () =>
+            {
+                var token = TokenCell?.Entry.Text.Trim().Replace(" ", "");
+                await LogInAsync(token);
+            }, ToolbarItemOrder.Default, 0);
+
             if(!_providerType.HasValue)
             {
                 instruction.Text = AppResources.NoTwoStepAvailable;
@@ -111,12 +120,6 @@ namespace Bit.App.Pages
             else if(_providerType.Value == TwoFactorProviderType.Authenticator ||
                 _providerType.Value == TwoFactorProviderType.Email)
             {
-                var continueToolbarItem = new ToolbarItem(AppResources.Continue, Helpers.ToolbarImage("login.png"), async () =>
-                {
-                    var token = TokenCell?.Entry.Text.Trim().Replace(" ", "");
-                    await LogInAsync(token);
-                }, ToolbarItemOrder.Default, 0);
-
                 var padding = Helpers.OnPlatform(
                     iOS: new Thickness(15, 20),
                     Android: new Thickness(15, 8),
@@ -126,7 +129,7 @@ namespace Bit.App.Pages
                     imageSource: "lock", containerPadding: padding);
 
                 TokenCell.Entry.Keyboard = Keyboard.Numeric;
-                TokenCell.Entry.ReturnType = ReturnType.Go;
+                TokenCell.Entry.TargetReturnType = Enums.ReturnType.Go;
 
                 var table = new TwoFactorTable(
                     new TableSection(Helpers.GetEmptyTableSectionTitle())
@@ -179,9 +182,10 @@ namespace Bit.App.Pages
                 Content = scrollView;
                 TokenCell.Entry.FocusWithDelay();
             }
-            else if(_providerType == TwoFactorProviderType.Duo)
+            else if(_providerType == TwoFactorProviderType.Duo ||
+                _providerType == TwoFactorProviderType.OrganizationDuo)
             {
-                var duoParams = _providers[TwoFactorProviderType.Duo];
+                var duoParams = _providers[_providerType.Value];
 
                 var host = WebUtility.UrlEncode(duoParams["Host"].ToString());
                 var req = WebUtility.UrlEncode(duoParams["Signature"].ToString());
@@ -223,16 +227,17 @@ namespace Bit.App.Pages
                 table.WrappingStackLayout = () => layout;
                 scrollView.Content = layout;
 
-                Title = "Duo";
+                Title = _providerType == TwoFactorProviderType.Duo ? "Duo" : _duoOrgTitle;
                 Content = scrollView;
             }
             else if(_providerType == TwoFactorProviderType.YubiKey)
             {
-                instruction.Text = AppResources.YubiKeyInstruction;
+                instruction.Text = Device.RuntimePlatform == Device.iOS ? AppResources.YubiKeyInstructionIos :
+                    AppResources.YubiKeyInstruction;
 
                 var image = new CachedImage
                 {
-                    Source = "yubikey",
+                    Source = "yubikey.png",
                     VerticalOptions = LayoutOptions.Start,
                     HorizontalOptions = LayoutOptions.Center,
                     WidthRequest = 266,
@@ -240,17 +245,46 @@ namespace Bit.App.Pages
                     Margin = new Thickness(0, 0, 0, 25)
                 };
 
-                var table = new TwoFactorTable(
-                    new TableSection(Helpers.GetEmptyTableSectionTitle())
-                    {
-                        RememberCell
-                    });
+                var section = new TableSection(Helpers.GetEmptyTableSectionTitle())
+                {
+                    RememberCell
+                };
 
+                if(Device.RuntimePlatform != Device.iOS)
+                {
+                    TokenCell = new FormEntryCell("", isPassword: true, imageSource: "lock",
+                        useLabelAsPlaceholder: true);
+                    TokenCell.Entry.TargetReturnType = Enums.ReturnType.Go;
+                    section.Insert(0, TokenCell);
+                }
+
+                var table = new TwoFactorTable(section);
                 var layout = new RedrawableStackLayout
                 {
-                    Children = { instruction, image, table, anotherMethodButton },
+                    Children = { instruction, image, table },
                     Spacing = 0
                 };
+
+                if(Device.RuntimePlatform == Device.iOS)
+                {
+                    var tryAgainButton = new ExtendedButton
+                    {
+                        Text = AppResources.TryAgain,
+                        Style = (Style)Application.Current.Resources["btn-primaryAccent"],
+                        Margin = new Thickness(15, 0, 15, 0),
+                        Command = new Command(() => ListenYubiKey(true, true)),
+                        Uppercase = false,
+                        BackgroundColor = Color.Transparent,
+                        VerticalOptions = LayoutOptions.Start
+                    };
+                    layout.Children.Add(tryAgainButton);
+                }
+                else
+                {
+                    ToolbarItems.Add(continueToolbarItem);
+                }
+
+                layout.Children.Add(anotherMethodButton);
 
                 table.WrappingStackLayout = () => layout;
                 scrollView.Content = layout;
@@ -269,6 +303,11 @@ namespace Bit.App.Pages
             if(TokenCell == null && Device.RuntimePlatform == Device.Android)
             {
                 _deviceActionService.DismissKeyboard();
+            }
+
+            if(TokenCell != null)
+            {
+                TokenCell.Entry.FocusWithDelay();
             }
         }
 
@@ -291,6 +330,20 @@ namespace Bit.App.Pages
                 TokenCell.Dispose();
                 TokenCell.Entry.Completed -= Entry_Completed;
             }
+
+            MessagingCenter.Unsubscribe<Application, string>(Application.Current, "GotYubiKeyOTP");
+            MessagingCenter.Unsubscribe<Application>(Application.Current, "ResumeYubiKey");
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            // ref: https://github.com/bitwarden/mobile/issues/350
+            if(Device.RuntimePlatform == Device.Android && _providerType.HasValue &&
+                _providerType.Value == TwoFactorProviderType.YubiKey)
+            {
+                return true;
+            }
+            return base.OnBackButtonPressed();
         }
 
         private async void AnotherMethodAsync()
@@ -298,6 +351,11 @@ namespace Bit.App.Pages
             var beforeProviderType = _providerType;
 
             var options = new List<string>();
+            if(_providers.ContainsKey(TwoFactorProviderType.OrganizationDuo))
+            {
+                options.Add(_duoOrgTitle);
+            }
+
             if(_providers.ContainsKey(TwoFactorProviderType.Authenticator))
             {
                 options.Add(AppResources.AuthenticatorAppTitle);
@@ -312,7 +370,7 @@ namespace Bit.App.Pages
             {
                 var nfcKey = _providers[TwoFactorProviderType.YubiKey].ContainsKey("Nfc") &&
                     (bool)_providers[TwoFactorProviderType.YubiKey]["Nfc"];
-                if(_deviceInfoService.NfcEnabled && nfcKey)
+                if((_deviceInfoService.NfcEnabled && nfcKey) || Device.RuntimePlatform != Device.iOS)
                 {
                     options.Add(AppResources.YubiKeyTitle);
                 }
@@ -334,6 +392,10 @@ namespace Bit.App.Pages
             else if(selection == "Duo")
             {
                 _providerType = TwoFactorProviderType.Duo;
+            }
+            else if(selection == _duoOrgTitle)
+            {
+                _providerType = TwoFactorProviderType.OrganizationDuo;
             }
             else if(selection == AppResources.YubiKeyTitle)
             {
@@ -402,10 +464,10 @@ namespace Bit.App.Pages
                 return;
             }
 
-            _deviceActionService.ShowLoading(string.Concat(AppResources.Validating, "..."));
+            await _deviceActionService.ShowLoadingAsync(string.Concat(AppResources.Validating, "..."));
             var response = await _authService.TokenPostTwoFactorAsync(_providerType.Value, token, RememberCell.On,
                 _email, _masterPasswordHash, _key);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
 
             if(!response.Success)
             {
@@ -434,7 +496,8 @@ namespace Bit.App.Pages
                     switch(p.Key)
                     {
                         case TwoFactorProviderType.Authenticator:
-                            if(provider == TwoFactorProviderType.Duo || provider == TwoFactorProviderType.YubiKey)
+                            if(provider == TwoFactorProviderType.Duo || provider == TwoFactorProviderType.YubiKey ||
+                                provider == TwoFactorProviderType.OrganizationDuo)
                             {
                                 continue;
                             }
@@ -446,17 +509,25 @@ namespace Bit.App.Pages
                             }
                             break;
                         case TwoFactorProviderType.Duo:
-                            if(provider == TwoFactorProviderType.YubiKey)
+                            if(provider == TwoFactorProviderType.YubiKey ||
+                                provider == TwoFactorProviderType.OrganizationDuo)
                             {
                                 continue;
                             }
                             break;
                         case TwoFactorProviderType.YubiKey:
-                            var nfcKey = p.Value.ContainsKey("Nfc") && (bool)p.Value["Nfc"];
-                            if(!_deviceInfoService.NfcEnabled || !nfcKey)
+                            if(provider == TwoFactorProviderType.OrganizationDuo)
                             {
                                 continue;
                             }
+
+                            var nfcKey = p.Value.ContainsKey("Nfc") && (bool)p.Value["Nfc"];
+                            if((!_deviceInfoService.NfcEnabled || !nfcKey) && Device.RuntimePlatform == Device.iOS)
+                            {
+                                continue;
+                            }
+                            break;
+                        case TwoFactorProviderType.OrganizationDuo:
                             break;
                         default:
                             continue;

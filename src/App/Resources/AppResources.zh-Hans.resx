@@ -140,7 +140,7 @@
     <comment>Navigate back to the previous screen.</comment>
   </data>
   <data name="Bitwarden" xml:space="preserve">
-    <value>bitwarden</value>
+    <value>Bitwarden</value>
     <comment>App name. Shouldn't ever change.</comment>
   </data>
   <data name="Cancel" xml:space="preserve">
@@ -381,7 +381,7 @@
     <value>访问我们的网站</value>
   </data>
   <data name="VisitOurWebsiteDescription" xml:space="preserve">
-    <value>访问我们的网站来获得帮助、新闻，或者学习如何使用 bitwarden。</value>
+    <value>访问我们的网站来获得帮助、新闻，或者学习如何使用 Bitwarden。</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>网站</value>
@@ -403,7 +403,7 @@
     <value>App 扩展</value>
   </data>
   <data name="AutofillAccessibilityDescription" xml:space="preserve">
-    <value>使用 bitwarden 无障碍服务在应用和网站自动填写您的登录项目。</value>
+    <value>使用 Bitwarden 无障碍服务在应用和网站自动填写您的登录项目。</value>
   </data>
   <data name="AutofillService" xml:space="preserve">
     <value>自动填充</value>
@@ -412,19 +412,19 @@
     <value>避免模棱两可</value>
   </data>
   <data name="BitwardenAppExtension" xml:space="preserve">
-    <value>bitwarden App 扩展</value>
+    <value>Bitwarden App 扩展</value>
   </data>
   <data name="BitwardenAppExtensionAlert" xml:space="preserve">
-    <value>最简单的添加网站的方法是 bitwarden App 扩展。请到 “工具” 页面获得更多信息。</value>
+    <value>最简单的添加网站的方法是 Bitwarden App 扩展。请到 “工具” 页面获得更多信息。</value>
   </data>
   <data name="BitwardenAppExtensionDescription" xml:space="preserve">
-    <value>在 Safari 和其他应用使用 bitwarden 来自动填充登录项目。</value>
+    <value>在 Safari 和其他应用中使用 Bitwarden 来自动填写登录信息。</value>
   </data>
   <data name="BitwardenAutofillService" xml:space="preserve">
-    <value>bitwarden 自动填充</value>
+    <value>Bitwarden 自动填写服务</value>
   </data>
   <data name="BitwardenAutofillAccessibilityServiceDescription" xml:space="preserve">
-    <value>使用 bitwarden 无障碍服务自动填写您的登录项目。</value>
+    <value>使用 Bitwarden 无障碍服务自动填写您的登录信息。</value>
   </data>
   <data name="ChangeEmail" xml:space="preserve">
     <value>修改 Email</value>
@@ -482,7 +482,7 @@
     <value>开启 App 扩展</value>
   </data>
   <data name="ExtensionInSafari" xml:space="preserve">
-    <value>在 Safari 中，使用共享图标寻找 bitwarden (提示: 在菜单最下面一行的右边)。</value>
+    <value>在 Safari 中，使用共享图标寻找 Bitwarden （提示：在菜单最下面一行的右边）。</value>
     <comment>Safari is the name of apple's web browser</comment>
   </data>
   <data name="ExtensionInstantAccess" xml:space="preserve">
@@ -498,13 +498,13 @@
     <value>现在可以在 Safari、Chrome 以及其他支持的应用中方便的访问您的登录项目了。</value>
   </data>
   <data name="ExtensionSetup2" xml:space="preserve">
-    <value>在 Safari 和 Chrome 中，使用共享图标寻找 bitwarden (提示: 在菜单最下面一行的右边).</value>
+    <value>在 Safari 和 Chrome 中，使用共享图标寻找 Bitwarden (提示: 在菜单最下面一行的右边).</value>
   </data>
   <data name="ExtensionTapIcon" xml:space="preserve">
-    <value>在菜单中点击 bitwarden 图标来启动扩展。</value>
+    <value>在菜单中点击 Bitwarden 图标来启动扩展。</value>
   </data>
   <data name="ExtensionTurnOn" xml:space="preserve">
-    <value>要在 Safari 和其他应用打开 bitwarden ，请在菜单最下面一行的最右边点击 "更多" 图标。</value>
+    <value>要在 Safari 和其他应用打开 Bitwarden ，请在菜单最下面一行的最右边点击 "更多" 图标。</value>
   </data>
   <data name="Favorite" xml:space="preserve">
     <value>收藏</value>
@@ -591,7 +591,7 @@
     <value>更多设置</value>
   </data>
   <data name="MustLogInMainApp" xml:space="preserve">
-    <value>您必须先登录 bitwarden 应用，才能使用扩展。</value>
+    <value>您必须先登录 Bitwarden 应用，才能使用扩展。</value>
   </data>
   <data name="Never" xml:space="preserve">
     <value>从不</value>
@@ -616,7 +616,7 @@
     <comment>Confirmation, like "Ok, I understand it"</comment>
   </data>
   <data name="OptionDefaults" xml:space="preserve">
-    <value>选项默认值是由 bitwarden 应用的密码生成工具设置的。</value>
+    <value>选项默认值是由 Bitwarden 应用的密码生成工具设置。</value>
   </data>
   <data name="Options" xml:space="preserve">
     <value>选项</value>
@@ -640,7 +640,7 @@
     <value>您确定要覆盖当前密码吗？</value>
   </data>
   <data name="PushNotificationAlert" xml:space="preserve">
-    <value>bitwarden 使用推送通知来自动同步您的密码库。为了获得最佳体验，接下来询问是否开启通知时，请选择“是”。</value>
+    <value>Bitwarden 使用推送通知来自动同步您的密码库。为了获得最佳体验，接下来询问是否开启通知时，请选择 “允许”。</value>
     <comment>Push notifications for apple products</comment>
   </data>
   <data name="RateTheApp" xml:space="preserve">
@@ -650,7 +650,7 @@
     <value>请给我们好评！</value>
   </data>
   <data name="RateTheAppDescriptionAppStore" xml:space="preserve">
-    <value>App Store 评分会在 bitwarden 发布新版本时重置。请给我们好评！</value>
+    <value>App Store 评分会在 Bitwarden 发布新版本时重置。请给我们好评！</value>
   </data>
   <data name="RegeneratePassword" xml:space="preserve">
     <value>重新生成密码</value>
@@ -726,10 +726,10 @@
     <value>查看项目</value>
   </data>
   <data name="WebVault" xml:space="preserve">
-    <value>bitwarden 网页版密码库</value>
+    <value>Bitwarden 网页版密码库</value>
   </data>
   <data name="WebVaultDescription" xml:space="preserve">
-    <value>使用 bitwarden 网页版可以从任何浏览器管理您的登录项目。</value>
+    <value>使用 Bitwarden 网页版可以从任何浏览器管理您的登录项目。</value>
   </data>
   <data name="Lost2FAApp" xml:space="preserve">
     <value>认证应用已丢失？</value>
@@ -756,7 +756,7 @@
     <comment>This is used for the autofill service. ex. "There are no items in your vault for twitter.com".</comment>
   </data>
   <data name="BitwardenAutofillServiceNotification" xml:space="preserve">
-    <value>当你看到一个 bitwarden 自动填充通知时，您可以利用它来启动自动填充服务。</value>
+    <value>当你看到一个 Bitwarden 自动填写通知时，您可以用它来启动自动填写服务。</value>
   </data>
   <data name="BitwardenAutofillServiceNotificationContent" xml:space="preserve">
     <value>点击此通知，以便从您的密码库自动登录。</value>
@@ -765,7 +765,7 @@
     <value>打开无障碍设置</value>
   </data>
   <data name="BitwardenAutofillServiceStep1" xml:space="preserve">
-    <value>1. 在 Android 的辅助功能设置屏幕上，触摸服务项下的 "bitwarden" 的标题。</value>
+    <value>1. 在 Android 的辅助功能设置屏幕上，触摸服务项下的 "Bitwarden" 的标题。</value>
   </data>
   <data name="BitwardenAutofillServiceStep2" xml:space="preserve">
     <value>2. 切换开关，然后按确定接受。</value>
@@ -783,7 +783,7 @@
     <value>测试版</value>
   </data>
   <data name="BitwardenAutofillServiceAlert" xml:space="preserve">
-    <value>向您的密码库中添加新的登录项目最简单的方法，是 bitwarden 自动填充服务。要了解更多有关使用 bitwarden 自动填充服务，请转到 "工具" 屏幕。</value>
+    <value>向您的密码库中添加新登录项目的最简单方法，就是 Bitwarden 自动填写服务。转到“工具”屏幕了解更多有关使用 Bitwarden 自动填写服务的方法。</value>
   </data>
   <data name="Autofill" xml:space="preserve">
     <value>自动填充</value>
@@ -883,11 +883,11 @@
     <comment>For 2FA</comment>
   </data>
   <data name="YubiKeyInstruction" xml:space="preserve">
-    <value>将您的 YubiKey NEO 靠在设备的后面。</value>
+    <value>将您的 YubiKey NEO 靠在设备的后面，或者将 YubiKey 插入您设备的 USB 端口，按下按钮后继续。</value>
   </data>
   <data name="YubiKeyTitle" xml:space="preserve">
-    <value>YubiKey NEO 安全密钥</value>
-    <comment>"YubiKey NEO" is the product name and should not be translated.</comment>
+    <value>YubiKey 安全密钥</value>
+    <comment>"YubiKey" is the product name and should not be translated.</comment>
   </data>
   <data name="AddNewAttachment" xml:space="preserve">
     <value>添加新附件</value>
@@ -1009,7 +1009,7 @@
     <value>自托管环境</value>
   </data>
   <data name="SelfHostedEnvironmentFooter" xml:space="preserve">
-    <value>指定自己配置、托管的 bitwarden 环境的基础 URL。</value>
+    <value>指定自己配置、托管的 Bitwarden 环境的基础 URL。</value>
   </data>
   <data name="ServerUrl" xml:space="preserve">
     <value>服务器 URL</value>
@@ -1022,12 +1022,6 @@
   </data>
   <data name="CustomFields" xml:space="preserve">
     <value>自定义字段</value>
-  </data>
-  <data name="CustomFieldsUpdated" xml:space="preserve">
-    <value>自定义字段已更新</value>
-  </data>
-  <data name="NoCustomFields" xml:space="preserve">
-    <value>没有自定义字段。你可以在网页版密码库，或者浏览器扩展来管理自定义字段。</value>
   </data>
   <data name="CopyNumber" xml:space="preserve">
     <value>复制号码</value>
@@ -1180,7 +1174,7 @@
     <value>图标服务器 URL</value>
   </data>
   <data name="AutofillWithBitwarden" xml:space="preserve">
-    <value>使用 bitwarden 自动填充</value>
+    <value>使用 Bitwarden 自动填写</value>
   </data>
   <data name="VaultIsLocked" xml:space="preserve">
     <value>密码库已锁定</value>
@@ -1201,10 +1195,10 @@
     <value>自动填充服务</value>
   </data>
   <data name="AutofillServiceDescription" xml:space="preserve">
-    <value>bitwarden 自动填充服务使用 Android 自动填充框架来帮助您将登录、信用卡和身份信息填充到您的设备上的其他应用程序中。</value>
+    <value>Bitwarden 自动填写服务使用 Android 自动填写框架来帮助您将登录、身份等信息填写到在的设备上的其他应用程序。</value>
   </data>
   <data name="BitwardenAutofillServiceDescription" xml:space="preserve">
-    <value>使用 bitwarden 自动填充服务在应用和网站自动填写您的登录项目。</value>
+    <value>使用 Bitwarden 自动填写服务在应用和网站自动填写您的登录项目。</value>
   </data>
   <data name="BitwardenAutofillServiceOpenAutofillSettings" xml:space="preserve">
     <value>打开自动填充设置</value>
@@ -1223,12 +1217,100 @@
     <value>验证面容 ID</value>
   </data>
   <data name="UseWindowsHelloToUnlock" xml:space="preserve">
-    <value>Unlock with Windows Hello</value>
+    <value>使用 Windows Hello 解锁。</value>
   </data>
   <data name="VerifyWindowsHello" xml:space="preserve">
-    <value>Verify with Windows Hello</value>
+    <value>使用 Windows Hello 验证。</value>
   </data>
   <data name="WindowsHello" xml:space="preserve">
     <value>Windows Hello</value>
+  </data>
+  <data name="BitwardenAutofillGoToSettings" xml:space="preserve">
+    <value>我们无法为您自动打开 Android 自动填写设置菜单。您可以手动访问 Android 设置 &gt; 系统 &gt; 语言和输入 &gt; 高级 &gt; 自动填写服务 到达自动填写设置。</value>
+  </data>
+  <data name="CustomFieldName" xml:space="preserve">
+    <value>自定义字段名称</value>
+  </data>
+  <data name="FieldTypeBoolean" xml:space="preserve">
+    <value>布尔</value>
+  </data>
+  <data name="FieldTypeHidden" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="FieldTypeText" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="NewCustomField" xml:space="preserve">
+    <value>新建自定义字段</value>
+  </data>
+  <data name="SelectTypeField" xml:space="preserve">
+    <value>您想添加的自定义字段的类型是？</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="NewUri" xml:space="preserve">
+    <value>新 URI</value>
+  </data>
+  <data name="URIPosition" xml:space="preserve">
+    <value>URI {0}</value>
+    <comment>Label for a uri/url with position. i.e. URI 1, URI 2, etc</comment>
+  </data>
+  <data name="BaseDomain" xml:space="preserve">
+    <value>基础域</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="Exact" xml:space="preserve">
+    <value>精确</value>
+  </data>
+  <data name="Host" xml:space="preserve">
+    <value>主机</value>
+    <comment>A URL's host value. For example, the host of https://sub.domain.com:443 is 'sub.domain.com:443'.</comment>
+  </data>
+  <data name="RegEx" xml:space="preserve">
+    <value>正则表达式</value>
+    <comment>A programming term, also known as 'RegEx'.</comment>
+  </data>
+  <data name="StartsWith" xml:space="preserve">
+    <value>开始于</value>
+  </data>
+  <data name="URIMatchDetection" xml:space="preserve">
+    <value>URI 匹配检测</value>
+  </data>
+  <data name="MatchDetection" xml:space="preserve">
+    <value>匹配检测</value>
+    <comment>URI match detection for auto-fill.</comment>
+  </data>
+  <data name="YesAndSave" xml:space="preserve">
+    <value>是的，保存</value>
+  </data>
+  <data name="AutofillAndSave" xml:space="preserve">
+    <value>自动填充并保存</value>
+  </data>
+  <data name="Organization" xml:space="preserve">
+    <value>组织</value>
+    <comment>An entity of multiple related people (ex. a team or business organization).</comment>
+  </data>
+  <data name="HoldYubikeyNearTop" xml:space="preserve">
+    <value>把你的 Yubikey 靠近设备的顶部。</value>
+  </data>
+  <data name="TryAgain" xml:space="preserve">
+    <value>再试一次</value>
+  </data>
+  <data name="YubiKeyInstructionIos" xml:space="preserve">
+    <value>要继续, 请将您的 YubiKey NEO 设备放在设备背面。</value>
+  </data>
+  <data name="BitwardenAutofillAccessibilityServiceDescription2" xml:space="preserve">
+    <value>当应用程序不支持标准的自动填充服务时, 辅助功能服务可能会很有用。</value>
+  </data>
+  <data name="DatePasswordUpdated" xml:space="preserve">
+    <value>密码更新于</value>
+    <comment>ex. Date this password was updated</comment>
+  </data>
+  <data name="DateUpdated" xml:space="preserve">
+    <value>更新于</value>
+    <comment>ex. Date this item was updated</comment>
   </data>
 </root>

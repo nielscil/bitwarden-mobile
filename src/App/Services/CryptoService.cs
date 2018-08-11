@@ -82,8 +82,25 @@ namespace Bit.App.Services
                     var encKeyCs = new CipherString(encKey);
                     try
                     {
-                        var decBytes = DecryptToBytes(encKeyCs, Key);
-                        _encKey = new SymmetricCryptoKey(decBytes);
+                        byte[] decEncKey = null;
+                        if(encKeyCs.EncryptionType == EncryptionType.AesCbc256_B64)
+                        {
+                            decEncKey = DecryptToBytes(encKeyCs, Key);
+                        }
+                        else if(encKeyCs.EncryptionType == EncryptionType.AesCbc256_HmacSha256_B64)
+                        {
+                            var newKey = StretchKey(Key);
+                            decEncKey = DecryptToBytes(encKeyCs, newKey);
+                        }
+                        else
+                        {
+                            throw new Exception("Unsupported EncKey type");
+                        }
+
+                        if(decEncKey != null)
+                        {
+                            _encKey = new SymmetricCryptoKey(decEncKey);
+                        }
                     }
                     catch
                     {
@@ -386,7 +403,7 @@ namespace Bit.App.Services
             if(EncKey?.MacKey != null && !string.IsNullOrWhiteSpace(encyptedValue.Mac))
             {
                 var computedMacBytes = Crypto.ComputeMac(encyptedValue.CipherTextBytes, EncKey.MacKey);
-                if(!Crypto.MacsEqual(EncKey.MacKey, computedMacBytes, encyptedValue.MacBytes))
+                if(!Crypto.MacsEqual(computedMacBytes, encyptedValue.MacBytes))
                 {
                     throw new InvalidOperationException("MAC failed.");
                 }
@@ -424,7 +441,7 @@ namespace Bit.App.Services
                 throw new ArgumentNullException(nameof(salt));
             }
 
-            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            var passwordBytes = Encoding.UTF8.GetBytes(NormalizePassword(password));
             var saltBytes = Encoding.UTF8.GetBytes(salt);
 
             var keyBytes = _keyDerivationService.DeriveKey(passwordBytes, saltBytes, 5000);
@@ -449,7 +466,7 @@ namespace Bit.App.Services
                 throw new ArgumentNullException(nameof(password));
             }
 
-            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            var passwordBytes = Encoding.UTF8.GetBytes(NormalizePassword(password));
             var hash = _keyDerivationService.DeriveKey(key.Key, passwordBytes, 1);
             return hash;
         }
@@ -462,8 +479,41 @@ namespace Bit.App.Services
 
         public CipherString MakeEncKey(SymmetricCryptoKey key)
         {
-            var bytes = Crypto.RandomBytes(512 / 8);
-            return Encrypt(bytes, key);
+            var encKey = Crypto.RandomBytes(64);
+            // TODO: Remove hardcoded true/false when we're ready to enable key stretching
+            if(false && key.Key.Length == 32)
+            {
+                var newKey = StretchKey(key);
+                return Encrypt(encKey, newKey);
+            }
+            else if(true || key.Key.Length == 64)
+            {
+                return Encrypt(encKey, key);
+            }
+
+            throw new Exception("Invalid key size.");
+        }
+
+        // Some users like to copy/paste passwords from external files. Sometimes this can lead to two different
+        // values on mobiles apps vs the web. For example, on Android an EditText will accept a new line character
+        // (\n), whereas whenever you paste a new line character on the web in a HTML input box it is converted
+        // to a space ( ). Normalize those values so that they are the same on all platforms.
+        private string NormalizePassword(string password)
+        {
+            return password
+                .Replace("\r\n", " ") // Windows-style new line => space
+                .Replace("\n", " ") // New line => space
+                .Replace(" ", " "); // No-break space (00A0) => space
+        }
+
+        private SymmetricCryptoKey StretchKey(SymmetricCryptoKey key)
+        {
+            var newKey = new byte[64];
+            var encKey = Crypto.HkdfExpand(key.Key, Encoding.UTF8.GetBytes("enc"), 32);
+            var macKey = Crypto.HkdfExpand(key.Key, Encoding.UTF8.GetBytes("mac"), 32);
+            encKey.CopyTo(newKey, 0);
+            macKey.CopyTo(newKey, 32);
+            return new SymmetricCryptoKey(newKey);
         }
     }
 }

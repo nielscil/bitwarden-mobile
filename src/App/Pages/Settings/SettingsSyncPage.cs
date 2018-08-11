@@ -68,10 +68,6 @@ namespace Bit.App.Pages
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            if(!_connectivity.IsConnected)
-            {
-                AlertNoConnection();
-            }
         }
 
         private void SetLastSync()
@@ -101,9 +97,9 @@ namespace Bit.App.Pages
                 return;
             }
 
-            _deviceActionService.ShowLoading(AppResources.Syncing);
+            await _deviceActionService.ShowLoadingAsync(AppResources.Syncing);
             var succeeded = await _syncService.FullSyncAsync(true);
-            _deviceActionService.HideLoading();
+            await _deviceActionService.HideLoadingAsync();
             if(succeeded)
             {
                 _deviceActionService.Toast(AppResources.SyncingComplete);

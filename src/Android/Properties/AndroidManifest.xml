@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.x8bit.bitwarden" android:versionName="1.14.2" android:installLocation="auto" android:versionCode="502" xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.x8bit.bitwarden" android:versionName="1.18.0" android:installLocation="auto" android:versionCode="502" xmlns:tools="http://schemas.android.com/tools">
   <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="23" />
 
   <uses-permission android:name="android.permission.INTERNET" />
@@ -12,7 +12,8 @@
   <uses-feature android:name="android.hardware.camera" android:required="false" />
   <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
-  <application android:label="bitwarden" android:theme="@style/BitwardenTheme" android:allowBackup="false">
+  <application android:label="Bitwarden" android:theme="@style/BitwardenTheme" android:allowBackup="false"
+               android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
     <provider
         android:name="android.support.v4.content.FileProvider"
         android:authorities="com.x8bit.bitwarden.fileprovider"
@@ -30,10 +31,11 @@
       <intent-filter>
         <action android:name="com.google.android.c2dm.intent.RECEIVE" />
         <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-        <category android:name="${applicationId}" />
+        <category android:name="com.x8bit.bitwarden" />
       </intent-filter>
     </receiver>
 
-    <activity android:name="net.hockeyapp.android.UpdateActivity" android:exported="false" android:icon="@drawable/icon" />
+    <activity android:name="net.hockeyapp.android.UpdateActivity" android:exported="false" />
+    <meta-data android:name="android.max_aspect" android:value="2.1" />
   </application>
 </manifest>

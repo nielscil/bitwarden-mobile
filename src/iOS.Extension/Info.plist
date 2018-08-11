@@ -11,11 +11,11 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.14.2</string>
+	<string>1.18.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>25</string>
+	<string>35</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
@@ -59,9 +59,9 @@
 	<key>ITSEncryptionExportComplianceCode</key>
 	<string>ecf076d3-4824-4d7b-b716-2a9a47d7d296</string>
 	<key>CFBundleName</key>
-	<string>bitwarden extension</string>
+	<string>Bitwarden Extension</string>
 	<key>CFBundleDisplayName</key>
-	<string>bitwarden</string>
+	<string>Bitwarden</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<dict>
 		<key>arm64</key>
@@ -95,6 +95,10 @@
 		<string>et</string>
 		<string>vi</string>
 		<string>pl</string>
+		<string>ko</string>
+		<string>fa</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to unlock your vault.</string>
 </dict>
 </plist>

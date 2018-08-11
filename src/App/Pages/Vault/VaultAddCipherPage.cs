@@ -85,20 +85,22 @@ namespace Bit.App.Pages
         public List<Folder> Folders { get; set; }
         public TableRoot TableRoot { get; set; }
         public TableSection TopSection { get; set; }
+        public TableSection UrisSection { get; set; }
         public TableSection MiddleSection { get; set; }
+        public TableSection FieldsSection { get; set; }
         public ExtendedTableView Table { get; set; }
 
         public FormEntryCell NameCell { get; private set; }
         public FormEditorCell NotesCell { get; private set; }
         public FormPickerCell FolderCell { get; private set; }
         public ExtendedSwitchCell FavoriteCell { get; set; }
+        public ExtendedTextCell AddFieldCell { get; private set; }
+        public ExtendedTextCell AddUriCell { get; private set; }
 
         // Login
         public FormEntryCell LoginPasswordCell { get; private set; }
         public FormEntryCell LoginUsernameCell { get; private set; }
-        public FormEntryCell LoginUriCell { get; private set; }
         public FormEntryCell LoginTotpCell { get; private set; }
-        public ExtendedTextCell LoginGenerateCell { get; private set; }
 
         // Card
         public FormEntryCell CardNameCell { get; private set; }
@@ -175,27 +177,31 @@ namespace Bit.App.Pages
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            if(!_connectivity.IsConnected)
-            {
-                AlertNoConnection();
-            }
 
             NameCell.InitEvents();
             NotesCell.InitEvents();
             FolderCell.InitEvents();
+
+            if(AddFieldCell != null)
+            {
+                AddFieldCell.Tapped += AddFieldCell_Tapped;
+            }
+            if(AddUriCell != null)
+            {
+                AddUriCell.Tapped += AddUriCell_Tapped;
+            }
 
             switch(_type)
             {
                 case CipherType.Login:
                     LoginPasswordCell.InitEvents();
                     LoginUsernameCell.InitEvents();
-                    LoginUriCell.InitEvents();
                     LoginTotpCell.InitEvents();
-                    LoginPasswordCell.Button.Clicked += PasswordButton_Clicked;
-                    LoginGenerateCell.Tapped += GenerateCell_Tapped;
-                    if(LoginTotpCell?.Button != null)
+                    LoginPasswordCell.Button1.Clicked += PasswordButton_Clicked;
+                    LoginPasswordCell.Button2.Clicked += PasswordButton2_Clicked;
+                    if(LoginTotpCell?.Button1 != null)
                     {
-                        LoginTotpCell.Button.Clicked += TotpButton_Clicked;
+                        LoginTotpCell.Button1.Clicked += TotpButton_Clicked;
                     }
                     break;
                 case CipherType.Card:
@@ -205,6 +211,7 @@ namespace Bit.App.Pages
                     CardExpYearCell.InitEvents();
                     CardNameCell.InitEvents();
                     CardNumberCell.InitEvents();
+                    CardCodeCell.Button1.Clicked += CardCodeButton_Clicked;
                     break;
                 case CipherType.Identity:
                     IdTitleCell.InitEvents();
@@ -230,6 +237,9 @@ namespace Bit.App.Pages
                     break;
             }
 
+            Helpers.InitSectionEvents(FieldsSection);
+            Helpers.InitSectionEvents(UrisSection);
+
             if(_type == CipherType.Login && !_fromAutofill && !_settings.GetValueOrDefault(AddedLoginAlertKey, false))
             {
                 _settings.AddOrUpdateValue(AddedLoginAlertKey, true);
@@ -245,7 +255,14 @@ namespace Bit.App.Pages
                 }
             }
 
-            NameCell?.Entry.FocusWithDelay();
+            if(NameCell != null && string.IsNullOrWhiteSpace(NameCell.Entry.Text))
+            {
+                NameCell.Entry.FocusWithDelay();
+            }
+            else if(LoginUsernameCell != null && string.IsNullOrWhiteSpace(LoginUsernameCell.Entry.Text))
+            {
+                LoginUsernameCell.Entry.FocusWithDelay();
+            }
         }
 
         protected override void OnDisappearing()
@@ -256,18 +273,26 @@ namespace Bit.App.Pages
             NotesCell.Dispose();
             FolderCell.Dispose();
 
+            if(AddFieldCell != null)
+            {
+                AddFieldCell.Tapped -= AddFieldCell_Tapped;
+            }
+            if(AddUriCell != null)
+            {
+                AddUriCell.Tapped -= AddUriCell_Tapped;
+            }
+
             switch(_type)
             {
                 case CipherType.Login:
                     LoginTotpCell.Dispose();
                     LoginPasswordCell.Dispose();
                     LoginUsernameCell.Dispose();
-                    LoginUriCell.Dispose();
-                    LoginPasswordCell.Button.Clicked -= PasswordButton_Clicked;
-                    LoginGenerateCell.Tapped -= GenerateCell_Tapped;
-                    if(LoginTotpCell?.Button != null)
+                    LoginPasswordCell.Button1.Clicked -= PasswordButton_Clicked;
+                    LoginPasswordCell.Button2.Clicked -= PasswordButton2_Clicked;
+                    if(LoginTotpCell?.Button1 != null)
                     {
-                        LoginTotpCell.Button.Clicked -= TotpButton_Clicked;
+                        LoginTotpCell.Button1.Clicked -= TotpButton_Clicked;
                     }
                     break;
                 case CipherType.Card:
@@ -277,6 +302,7 @@ namespace Bit.App.Pages
                     CardExpYearCell.Dispose();
                     CardNameCell.Dispose();
                     CardNumberCell.Dispose();
+                    CardCodeCell.Button1.Clicked -= CardCodeButton_Clicked;
                     break;
                 case CipherType.Identity:
                     IdTitleCell.Dispose();
@@ -301,6 +327,9 @@ namespace Bit.App.Pages
                 default:
                     break;
             }
+
+            Helpers.DisposeSectionEvents(FieldsSection);
+            Helpers.DisposeSectionEvents(UrisSection);
         }
 
         protected override bool OnBackButtonPressed()
@@ -317,8 +346,18 @@ namespace Bit.App.Pages
         private void PasswordButton_Clicked(object sender, EventArgs e)
         {
             LoginPasswordCell.Entry.InvokeToggleIsPassword();
-            LoginPasswordCell.Button.Image =
+            LoginPasswordCell.Button1.Image =
                 "eye" + (!LoginPasswordCell.Entry.IsPasswordFromToggled ? "_slash" : string.Empty) + ".png";
+        }
+
+        private async void PasswordButton2_Clicked(object sender, EventArgs e)
+        {
+            var page = new ToolsPasswordGeneratorPage((password) =>
+            {
+                LoginPasswordCell.Entry.Text = password;
+                _deviceActionService.Toast(AppResources.PasswordGenerated);
+            }, _fromAutofill);
+            await Navigation.PushForDeviceAsync(page);
         }
 
         private async void TotpButton_Clicked(object sender, EventArgs e)
@@ -343,14 +382,11 @@ namespace Bit.App.Pages
             await Navigation.PushModalAsync(new ExtendedNavigationPage(scanPage));
         }
 
-        private async void GenerateCell_Tapped(object sender, EventArgs e)
+        private void CardCodeButton_Clicked(object sender, EventArgs e)
         {
-            var page = new ToolsPasswordGeneratorPage((password) =>
-            {
-                LoginPasswordCell.Entry.Text = password;
-                _deviceActionService.Toast(AppResources.PasswordGenerated);
-            }, _fromAutofill);
-            await Navigation.PushForDeviceAsync(page);
+            CardCodeCell.Entry.InvokeToggleIsPassword();
+            CardCodeCell.Button1.Image =
+                "eye" + (!CardCodeCell.Entry.IsPasswordFromToggled ? "_slash" : string.Empty) + ".png";
         }
 
         private void AlertNoConnection()
@@ -375,20 +411,15 @@ namespace Bit.App.Pages
 
             if(_type == CipherType.Login)
             {
-                LoginTotpCell = new FormEntryCell(AppResources.AuthenticatorKey, nextElement: NotesCell.Editor,
-                    useButton: _deviceInfo.HasCamera);
-                if(_deviceInfo.HasCamera)
-                {
-                    LoginTotpCell.Button.Image = "camera.png";
-                }
+                LoginTotpCell = new FormEntryCell(AppResources.AuthenticatorKey,
+                    button1: _deviceInfo.HasCamera ? "camera.png" : null);
                 LoginTotpCell.Entry.DisableAutocapitalize = true;
                 LoginTotpCell.Entry.Autocorrect = false;
                 LoginTotpCell.Entry.FontFamily =
                     Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
 
                 LoginPasswordCell = new FormEntryCell(AppResources.Password, isPassword: true, nextElement: LoginTotpCell.Entry,
-                    useButton: true);
-                LoginPasswordCell.Button.Image = "eye.png";
+                    button1: "eye.png", button2: "refresh_alt.png");
                 LoginPasswordCell.Entry.DisableAutocapitalize = true;
                 LoginPasswordCell.Entry.Autocorrect = false;
                 LoginPasswordCell.Entry.FontFamily =
@@ -398,12 +429,6 @@ namespace Bit.App.Pages
                     LoginPasswordCell.Entry.Text = _defaultPassword;
                 }
 
-                LoginGenerateCell = new ExtendedTextCell
-                {
-                    Text = AppResources.GeneratePassword,
-                    ShowDisclousure = true
-                };
-
                 LoginUsernameCell = new FormEntryCell(AppResources.Username, nextElement: LoginPasswordCell.Entry);
                 LoginUsernameCell.Entry.DisableAutocapitalize = true;
                 LoginUsernameCell.Entry.Autocorrect = false;
@@ -412,29 +437,34 @@ namespace Bit.App.Pages
                     LoginUsernameCell.Entry.Text = _defaultUsername;
                 }
 
-                LoginUriCell = new FormEntryCell(AppResources.URI, Keyboard.Url, nextElement: LoginUsernameCell.Entry);
-                if(!string.IsNullOrWhiteSpace(_defaultUri))
-                {
-                    LoginUriCell.Entry.Text = _defaultUri;
-                }
-
-                NameCell.NextElement = LoginUriCell.Entry;
+                NameCell.NextElement = LoginUsernameCell.Entry;
 
                 // Build sections
-                TopSection.Add(LoginUriCell);
                 TopSection.Add(LoginUsernameCell);
                 TopSection.Add(LoginPasswordCell);
-                TopSection.Add(LoginGenerateCell);
-                MiddleSection.Insert(0, LoginTotpCell);
+                TopSection.Add(LoginTotpCell);
+
+                // Uris
+                UrisSection = new TableSection(Helpers.GetEmptyTableSectionTitle());
+                AddUriCell = new ExtendedTextCell
+                {
+                    Text = $"+ {AppResources.NewUri}",
+                    TextColor = Colors.Primary
+                };
+                UrisSection.Add(AddUriCell);
+                UrisSection.Insert(0, Helpers.MakeUriCell(_defaultUri ?? string.Empty, null, UrisSection, this));
             }
             else if(_type == CipherType.Card)
             {
                 CardCodeCell = new FormEntryCell(AppResources.SecurityCode, Keyboard.Numeric,
-                    nextElement: NotesCell.Editor);
+                    isPassword: true, nextElement: NotesCell.Editor, button1: "eye.png");
                 if(!string.IsNullOrWhiteSpace(_defaultCardCode))
                 {
                     CardCodeCell.Entry.Text = _defaultCardCode;
                 }
+                CardCodeCell.Entry.FontFamily =
+                    Helpers.OnPlatform(iOS: "Menlo-Regular", Android: "monospace", Windows: "Courier");
+
                 CardExpYearCell = new FormEntryCell(AppResources.ExpirationYear, Keyboard.Numeric,
                     nextElement: CardCodeCell.Entry);
                 if(!string.IsNullOrWhiteSpace(_defaultCardExpYear))
@@ -540,6 +570,14 @@ namespace Bit.App.Pages
                 NameCell.NextElement = NotesCell.Editor;
             }
 
+            FieldsSection = new TableSection(AppResources.CustomFields);
+            AddFieldCell = new ExtendedTextCell
+            {
+                Text = $"+ {AppResources.NewCustomField}",
+                TextColor = Colors.Primary
+            };
+            FieldsSection.Add(AddFieldCell);
+
             // Make table
             TableRoot = new TableRoot
             {
@@ -548,8 +586,14 @@ namespace Bit.App.Pages
                 new TableSection(AppResources.Notes)
                 {
                     NotesCell
-                }
+                },
+                FieldsSection
             };
+
+            if(UrisSection != null)
+            {
+                TableRoot.Insert(1, UrisSection);
+            }
 
             Table = new ExtendedTableView
             {
@@ -606,8 +650,6 @@ namespace Bit.App.Pages
                     case CipherType.Login:
                         cipher.Login = new Login
                         {
-                            Uri = string.IsNullOrWhiteSpace(LoginUriCell.Entry.Text) ? null :
-                                LoginUriCell.Entry.Text.Encrypt(),
                             Username = string.IsNullOrWhiteSpace(LoginUsernameCell.Entry.Text) ? null :
                                 LoginUsernameCell.Entry.Text.Encrypt(),
                             Password = string.IsNullOrWhiteSpace(LoginPasswordCell.Entry.Text) ? null :
@@ -615,6 +657,8 @@ namespace Bit.App.Pages
                             Totp = string.IsNullOrWhiteSpace(LoginTotpCell.Entry.Text) ? null :
                                 LoginTotpCell.Entry.Text.Encrypt(),
                         };
+
+                        Helpers.ProcessUrisSectionForSave(UrisSection, cipher);
                         break;
                     case CipherType.SecureNote:
                         cipher.SecureNote = new SecureNote
@@ -744,9 +788,11 @@ namespace Bit.App.Pages
                     cipher.FolderId = Folders.ElementAt(FolderCell.Picker.SelectedIndex - 1).Id;
                 }
 
-                _deviceActionService.ShowLoading(AppResources.Saving);
+                Helpers.ProcessFieldsSectionForSave(FieldsSection, cipher);
+
+                await _deviceActionService.ShowLoadingAsync(AppResources.Saving);
                 var saveTask = await _cipherService.SaveAsync(cipher);
-                _deviceActionService.HideLoading();
+                await _deviceActionService.HideLoadingAsync();
 
                 if(saveTask.Succeeded)
                 {
@@ -782,6 +828,20 @@ namespace Bit.App.Pages
 
             ToolbarItems.Add(saveToolBarItem);
         }
+
+        private async void AddFieldCell_Tapped(object sender, EventArgs e)
+        {
+            await Helpers.AddField(this, FieldsSection);
+        }
+
+        private void AddUriCell_Tapped(object sender, EventArgs e)
+        {
+            var cell = Helpers.MakeUriCell(string.Empty, null, UrisSection, this);
+            if(cell != null)
+            {
+                UrisSection.Insert(UrisSection.Count - 1, cell);
+                cell.InitEvents();
+            }
+        }
     }
 }
-

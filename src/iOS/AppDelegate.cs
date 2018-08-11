@@ -17,9 +17,10 @@ using Bit.App.Pages;
 using HockeyApp.iOS;
 using Bit.iOS.Core;
 using Google.Analytics;
-using FFImageLoading.Forms.Touch;
 using SimpleInjector;
 using XLabs.Ioc.SimpleInjectorContainer;
+using CoreNFC;
+using Bit.App.Resources;
 
 namespace Bit.iOS
 {
@@ -27,8 +28,11 @@ namespace Bit.iOS
     public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsApplicationDelegate
     {
         private GaiCompletionHandler _dispatchHandler = null;
+        private NFCNdefReaderSession _nfcSession = null;
         private ILockService _lockService;
+        private IDeviceInfoService _deviceInfoService;
         private iOSPushNotificationHandler _pushHandler = null;
+        private NFCReaderDelegate _nfcDelegate = null;
 
         public ISettings Settings { get; set; }
 
@@ -42,7 +46,9 @@ namespace Bit.iOS
             }
 
             _lockService = Resolver.Resolve<ILockService>();
+            _deviceInfoService = Resolver.Resolve<IDeviceInfoService>();
             _pushHandler = new iOSPushNotificationHandler(Resolver.Resolve<IPushNotificationListener>());
+            _nfcDelegate = new NFCReaderDelegate((success, message) => ProcessYubikey(success, message));
             var appIdService = Resolver.Resolve<IAppIdService>();
 
             var crashManagerDelegate = new HockeyAppCrashManagerDelegate(
@@ -105,6 +111,23 @@ namespace Bit.iOS
 
                 modal.PresentViewController(activityViewController, true, null);
             });
+
+            MessagingCenter.Subscribe<Xamarin.Forms.Application, bool>(Xamarin.Forms.Application.Current,
+                    "ListenYubiKeyOTP", (sender, listen) =>
+                {
+                    if(_deviceInfoService.NfcEnabled)
+                    {
+                        _nfcSession?.InvalidateSession();
+                        _nfcSession?.Dispose();
+                        _nfcSession = null;
+                        if(listen)
+                        {
+                            _nfcSession = new NFCNdefReaderSession(_nfcDelegate, null, true);
+                            _nfcSession.AlertMessage = AppResources.HoldYubikeyNearTop;
+                            _nfcSession.BeginSession();
+                        }
+                    }
+                });
 
             UIApplication.SharedApplication.StatusBarHidden = false;
             UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
@@ -277,21 +300,17 @@ namespace Bit.iOS
             container.RegisterSingleton<ICipherCollectionRepository, CipherCollectionRepository>();
 
             // Other
-            container.RegisterSingleton(CrossConnectivity.Current);
-            container.RegisterSingleton(CrossFingerprint.Current);
+            container.RegisterInstance(CrossConnectivity.Current);
+            container.RegisterInstance(CrossFingerprint.Current);
 
             Settings = new Settings("group.com.8bit.bitwarden");
-            container.RegisterSingleton(Settings);
+            container.RegisterInstance(Settings);
 
             // Push
             container.RegisterSingleton<IPushNotificationListener, PushNotificationListener>();
             container.RegisterSingleton<IPushNotificationService, iOSPushNotificationService>();
 
-            FFImageLoading.ImageService.Instance.Initialize(new FFImageLoading.Config.Configuration
-            {
-                AnimateGifs = false
-            });
-            CachedImageRenderer.Init();
+            FFImageLoading.Forms.Platform.CachedImageRenderer.Init();
             Resolver.SetResolver(new SimpleInjectorResolver(container));
         }
 
@@ -326,6 +345,17 @@ namespace Bit.iOS
             };
 
             Gai.SharedInstance.Dispatch(_dispatchHandler);
+        }
+
+        private void ProcessYubikey(bool success, string message)
+        {
+            if(success)
+            {
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    MessagingCenter.Send(Xamarin.Forms.Application.Current, "GotYubiKeyOTP", message);
+                });
+            }
         }
     }
 }

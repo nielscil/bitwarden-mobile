@@ -13,9 +13,11 @@ namespace Bit.App.Pages
     {
         private readonly IGoogleAnalyticsService _googleAnalyticsService;
         private readonly IDeviceInfoService _deviceInfoService;
+        private readonly MainPage _mainPage;
 
-        public ToolsPage()
+        public ToolsPage(MainPage mainPage)
         {
+            _mainPage = mainPage;
             _googleAnalyticsService = Resolver.Resolve<IGoogleAnalyticsService>();
             _deviceInfoService = Resolver.Resolve<IDeviceInfoService>();
 
@@ -27,6 +29,7 @@ namespace Bit.App.Pages
         public ToolsViewCell ImportCell { get; set; }
         public ToolsViewCell ExtensionCell { get; set; }
         public ToolsViewCell AutofillCell { get; set; }
+        public ToolsViewCell AccessibilityCell { get; set; }
 
         public void Init()
         {
@@ -44,11 +47,17 @@ namespace Bit.App.Pages
             }
             if(Device.RuntimePlatform == Device.Android)
             {
-                var desc = _deviceInfoService.AutofillServiceSupported ?
-                    AppResources.BitwardenAutofillServiceDescription :
-                    AppResources.BitwardenAutofillAccessibilityServiceDescription;
-                AutofillCell = new ToolsViewCell(AppResources.BitwardenAutofillService, desc, "upload.png");
-                section.Add(AutofillCell);
+                var accessibilityDesc = AppResources.BitwardenAutofillAccessibilityServiceDescription;
+                if(_deviceInfoService.AutofillServiceSupported)
+                {
+                    AutofillCell = new ToolsViewCell(AppResources.AutofillService,
+                        AppResources.BitwardenAutofillServiceDescription, "upload2.png");
+                    section.Add(AutofillCell);
+                    accessibilityDesc += (" " + AppResources.BitwardenAutofillAccessibilityServiceDescription2);
+                }
+                AccessibilityCell = new ToolsViewCell(AppResources.AutofillAccessibilityService,
+                    accessibilityDesc, "upload.png");
+                section.Add(AccessibilityCell);
             }
 
             section.Add(WebCell);
@@ -94,6 +103,10 @@ namespace Bit.App.Pages
             {
                 AutofillCell.Tapped += AutofillCell_Tapped;
             }
+            if(AccessibilityCell != null)
+            {
+                AccessibilityCell.Tapped += AccessibilityCell_Tapped;
+            }
         }
 
         protected override void OnDisappearing()
@@ -110,19 +123,31 @@ namespace Bit.App.Pages
             {
                 AutofillCell.Tapped -= AutofillCell_Tapped;
             }
+            if(AccessibilityCell != null)
+            {
+                AccessibilityCell.Tapped -= AccessibilityCell_Tapped;
+            }
+        }
 
+        protected override bool OnBackButtonPressed()
+        {
+            if(Device.RuntimePlatform == Device.Android && _mainPage != null)
+            {
+                _mainPage.ResetToVaultPage();
+                return true;
+            }
+
+            return base.OnBackButtonPressed();
         }
 
         private void AutofillCell_Tapped(object sender, EventArgs e)
         {
-            if(_deviceInfoService.AutofillServiceSupported)
-            {
-                Navigation.PushModalAsync(new ExtendedNavigationPage(new ToolsAutofillServicePage()));
-            }
-            else
-            {
-                Navigation.PushModalAsync(new ExtendedNavigationPage(new ToolsAccessibilityServicePage()));
-            }
+            Navigation.PushModalAsync(new ExtendedNavigationPage(new ToolsAutofillServicePage()));
+        }
+
+        private void AccessibilityCell_Tapped(object sender, EventArgs e)
+        {
+            Navigation.PushModalAsync(new ExtendedNavigationPage(new ToolsAccessibilityServicePage()));
         }
 
         private void ExtensionCell_Tapped(object sender, EventArgs e)
